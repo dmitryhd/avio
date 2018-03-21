@@ -1,0 +1,3 @@
+pytest
+coverage
+pycodestyle==2.3.1
