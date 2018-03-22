@@ -5,9 +5,10 @@ aiohttp based microservice boilerplate
 
 # backlog
 ## v0.1
-- [ ] application
-- [ ] json request handlers
-- [ ] test setup
+- [x] application
+- [x] json request handlers
+- [x] test setup
+- [ ] app runner
 ## v0.2
 - [ ] configuration file 
 - [ ] configuration from ENV
@@ -15,6 +16,7 @@ aiohttp based microservice boilerplate
 - [ ] raven
 - [ ] mongo logger
 - [ ] statsd
+- [ ] measure handler time
 ## v0.4
 - [ ] performance benchmark vs tornado
 ## v0.4
