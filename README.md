@@ -8,7 +8,8 @@ aiohttp based microservice boilerplate
 - [x] application
 - [x] json request handlers
 - [x] test setup
-- [ ] app runner
+- [x] app runner
+- [x] valid 404, 500, catch other errors
 ## v0.2
 - [ ] configuration file 
 - [ ] configuration from ENV
@@ -27,4 +28,5 @@ aiohttp based microservice boilerplate
 - [ ] sphinx adapter
 ## v0.6
 - [ ] microservice clients
+- [ ] jsonschema validation
 
