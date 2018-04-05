@@ -54,3 +54,5 @@ doc.html
 
 .env
 .out
+
+.pytest_cache
