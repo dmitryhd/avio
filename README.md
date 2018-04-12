@@ -1,9 +1,10 @@
-# avio
-Work in progress
+# Avio
 
 aiohttp based microservice boilerplate
 
-# backlog
+_Work in progress_
+
+# Backlog
 ## v0.1
 - [x] application
 - [x] json request handlers
@@ -11,13 +12,14 @@ aiohttp based microservice boilerplate
 - [x] app runner
 - [x] valid 404, 500, catch other errors
 ## v0.2
-- [ ] configuration file 
+- [x] configuration file 
 - [ ] configuration from ENV
+- [ ] Modularized application builder
 ## v0.3
-- [ ] raven
-- [ ] mongo logger
 - [ ] statsd
 - [ ] measure handler time
+- [ ] raven
+- [ ] json logger
 ## v0.4
 - [ ] performance benchmark vs tornado
 ## v0.4
