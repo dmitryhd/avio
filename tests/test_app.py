@@ -29,16 +29,20 @@ async def test_info(cli):
 
 
 async def test_error_handler(cli):
-    resp = await cli.get('/_error')
-    assert resp.status == 500
+    response = await cli.get('/_error')
+    response_json = await response.json()
 
-    payload = await resp.json()
-    assert 'error' in payload
-    assert payload['error'].startswith('Traceback (most recent call last):\n  File')
+    assert 500 == response.status
+    assert 500 == response_json['code']
+    assert application.UNHANDLED_ERROR_MESSAGE == response_json['message']
+    assert response_json['traceback'].startswith('Traceback (most recent call last):\n  File')
 
 
 async def test_page_not_found(cli):
     resp = await cli.get('/some-strange-url')
     assert resp.status == 404
     payload = await resp.json()
-    assert {'error': 'Not Found'} == payload
+    assert 404 == payload['code']
+    assert 'Not Found' == payload['message']
+
+# TODO: test return unicode json in response

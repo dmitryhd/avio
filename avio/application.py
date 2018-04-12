@@ -2,6 +2,8 @@ import traceback
 
 from aiohttp import web
 
+import avio.default_handlers as default_handlers
+
 
 def run_app(app, config: dict = None):
     if not config:
@@ -13,47 +15,58 @@ def run_app(app, config: dict = None):
     )
 
 
-def setup_routes(app: web.Application):
-    app.router.add_view('/_info', InfoHandler)
-    app.router.add_view('/_error', ErrorHandler)
+def setup_default_routes(app: web.Application):
+    app.router.add_view('/_info', default_handlers.InfoHandler)
+    app.router.add_view('/_error', default_handlers.ErrorHandler)
 
 
-class InfoHandler(web.View):
-
-    async def get(self):
-        info = {'result': 'ok'}
-        return web.json_response(info)
-
-
-class ErrorHandler(web.View):
-
-    async def get(self):
-        raise Exception('Somebody activated _error handler')
+UNHANDLED_ERROR_MESSAGE = 'Wild error occured!'
 
 
 @web.middleware
-async def convert_errors_to_json(request, handler):
-    # on json https://aiohttp.readthedocs.io/en/stable/web_advanced.html#example
+async def format_exceptions(request, handler):
+    """
+    Middleware, that leaves responses, that don't raise exceptions unchanged.
+
+    Converts all errors to common format, containing
+    - http error code
+    - human readable message
+    - traceback
+
+    NOTE: on json handling https://aiohttp.readthedocs.io/en/stable/web_advanced.html#example
+    """
+
+    status = 200
+    message = ''
+    traceback_str = ''
     try:
-        response = await handler(request)
-        if response.status == 404:
-            message = response.message
-            return web.json_response({'error': message}, status=404)
+        # If no exception raised - return response straight away
+        return await handler(request)
+
+    # Jsonify any http exception on wrong url
     except web.HTTPException as ex:
-        if ex.status != 404:
-            raise
+        status = ex.status
+        traceback_str = traceback.format_exc()
         message = ex.reason
-        return web.json_response({'error': message}, status=404)
-    except Exception as e:
-        tb = traceback.format_exc()
-        error = {'error': tb}
-        return web.json_response(error, status=500)
-    return response
+
+    except Exception:
+        status = 500
+        traceback_str = traceback.format_exc()
+        message = UNHANDLED_ERROR_MESSAGE
+
+    response = {
+        'code': status,
+        'message': message,
+        'traceback': traceback_str,  # TODO: make traceback optional
+    }
+    # TODO: mb handle ensure json
+    return web.json_response(response, status=status)
 
 
 def make_app(config: dict = None) -> web.Application:
-    app = web.Application(middlewares=[convert_errors_to_json])
-    setup_routes(app)
+    app = web.Application(middlewares=[format_exceptions])
+    app[config] = config or {}
+    setup_default_routes(app)
     return app
 
 # https://aiohttp.readthedocs.io/en/stable/web_quickstart.html#organizing-handlers-in-classes
