@@ -3,6 +3,7 @@ import traceback
 from aiohttp import web
 
 import avio.default_handlers as default_handlers
+from avio.config import get_config_from_env
 
 
 def run_app(app, config: dict = None):
@@ -64,8 +65,14 @@ async def format_exceptions(request, handler):
 
 
 def make_app(config: dict = None) -> web.Application:
+    """
+    Creates application.
+    If config dict not specified, yaml file in env CONFIG_PAT will be readed, else empty config passed
+    """
     app = web.Application(middlewares=[format_exceptions])
-    app[config] = config or {}
+    if not config:
+        config = get_config_from_env()
+    app['config'] = config
     setup_default_routes(app)
     return app
 
