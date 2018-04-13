@@ -14,13 +14,13 @@ _Work in progress_
 ## v0.2
 - [x] configuration file 
 - [x] configuration from ENV
-- [ ] Modularized application builder
 ## v0.3
 - [ ] statsd
 - [ ] measure handler time
 - [ ] raven
 - [ ] json logger
 ## v0.4
+- [ ] Modularized application builder
 - [ ] performance benchmark vs tornado
 ## v0.4
 - [ ] periodic task to update (https://aiohttp.readthedocs.io/en/stable/web_advanced.html#background-tasks1)
