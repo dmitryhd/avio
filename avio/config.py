@@ -12,5 +12,6 @@ def get_config_from_env() -> dict:
     if not config_path:
         # TODO: raize config exception
         return {}
-    return read_yaml(config_path)
+    config = read_yaml(config_path)
+    return config or {}
 

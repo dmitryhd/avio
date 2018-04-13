@@ -6,13 +6,11 @@ import avio.default_handlers as default_handlers
 from avio.config import get_config_from_env
 
 
-def run_app(app, config: dict = None):
-    if not config:
-        config = {}
+def run_app(app):
     web.run_app(
         app,
-        host=config.get('app_host', '0.0.0.0'),
-        port=config.get('app_port', 8080),
+        host=app['config'].get('app_host', '0.0.0.0'),
+        port=app['config'].get('app_port', 8890),
     )
 
 

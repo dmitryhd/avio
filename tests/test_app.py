@@ -10,7 +10,8 @@ def test_create_app():
 
 
 def get_test_app() -> web.Application:
-    return application.make_app()
+    config = {}
+    return application.make_app(config=config)
 
 
 @pytest.fixture

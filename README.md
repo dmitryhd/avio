@@ -13,7 +13,7 @@ _Work in progress_
 - [x] valid 404, 500, catch other errors
 ## v0.2
 - [x] configuration file 
-- [ ] configuration from ENV
+- [x] configuration from ENV
 - [ ] Modularized application builder
 ## v0.3
 - [ ] statsd

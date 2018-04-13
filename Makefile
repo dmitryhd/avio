@@ -7,9 +7,8 @@ TESTS_ARGS=-m pytest $(TESTS_DIR) -v
 COVERAGE=coverage
 PEP8=pycodestyle
 
-DEV_CONFIG_PATH?='etc/service-dev.conf'
-TEST_CONFIG_PATH?='etc/service-test.conf'
-CI_CONFIG_PATH?=/etc/service/service.conf
+DEV_CONFIG_PATH?='etc/service-dev.yaml'
+TEST_CONFIG_PATH?='etc/service-test.yaml'
 
 all: help
 
