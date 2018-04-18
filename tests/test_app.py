@@ -46,4 +46,21 @@ async def test_page_not_found(cli):
     assert 404 == payload['code']
     assert 'Not Found' == payload['message']
 
+
+async def test_method_not_allowed(cli):
+    resp = await cli.post('/_error')
+    assert resp.status == 405
+    payload = await resp.json()
+    assert 405 == payload['code']
+    assert 'Method Not Allowed' == payload['message']
+
 # TODO: test return unicode json in response
+
+
+async def test_echo_handler(cli):
+    post_body = {'some_key': 'some_val даже с utf8'}
+    response = await cli.post('/_echo', json=post_body)
+    response_json = await response.json()
+
+    assert 200 == response.status
+    assert post_body == response_json

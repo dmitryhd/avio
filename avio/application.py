@@ -1,9 +1,11 @@
+import time
 import traceback
 
 from aiohttp import web
 
 import avio.default_handlers as default_handlers
 from avio.config import get_config_from_env
+import avio.log as log
 
 
 def run_app(app):
@@ -17,6 +19,8 @@ def run_app(app):
 def setup_default_routes(app: web.Application):
     app.router.add_view('/_info', default_handlers.InfoHandler)
     app.router.add_view('/_error', default_handlers.ErrorHandler)
+    app.router.add_view('/_echo', default_handlers.EchoHandler)
+    app.router.add_view('/_info_detailed', default_handlers.DetailedInfoHandler)
 
 
 UNHANDLED_ERROR_MESSAGE = 'Wild error occured!'
@@ -58,6 +62,7 @@ async def format_exceptions(request, handler):
         'message': message,
         'traceback': traceback_str,  # TODO: make traceback optional
     }
+    log.app_logger.info(traceback_str)
     # TODO: mb handle ensure json
     return web.json_response(response, status=status)
 
@@ -71,8 +76,12 @@ def make_app(config: dict = None) -> web.Application:
     if not config:
         config = get_config_from_env()
     app['config'] = config
+    app['start_ts'] = time.time()
     setup_default_routes(app)
+
+    log.configure_app_logger(logger_config=config.get('logging'))
     return app
+
 
 # https://aiohttp.readthedocs.io/en/stable/web_quickstart.html#organizing-handlers-in-classes
 # https://stackoverflow.com/questions/32819231/

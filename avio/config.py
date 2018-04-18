@@ -14,4 +14,3 @@ def get_config_from_env() -> dict:
         return {}
     config = read_yaml(config_path)
     return config or {}
-
