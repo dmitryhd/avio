@@ -31,4 +31,22 @@ _Work in progress_
 ## v0.6
 - [ ] microservice clients
 - [ ] jsonschema validation
+## opt
+- [x] benchmark
+- [ ] benchmark vs tornado
+- [ ] uvloop
+- [ ] ujson
+
+### Benchmark
+```
+wrk -t1 -c10 -d10s -R 2000 -s benchmark/echo.lua http://127.0.0.1:8890/_echo
+Running 10s test @ http://127.0.0.1:8890/_echo
+  1 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     3.13ms    1.90ms  11.32ms   73.87%
+    Req/Sec       -nan      -nan   0.00      0.00%
+  19943 requests in 10.00s, 4.53MB read
+Requests/sec:   1994.33
+Transfer/sec:    463.52KB
+```
 
