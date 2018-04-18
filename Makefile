@@ -8,7 +8,7 @@ COVERAGE=coverage
 PEP8=pycodestyle
 
 DEV_CONFIG_PATH?='etc/service-dev.yaml'
-TEST_CONFIG_PATH?='etc/service-test.yaml'
+TEST_CONFIG_PATH?='etc/service-dev.yaml'
 
 all: help
 
