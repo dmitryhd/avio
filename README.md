@@ -50,3 +50,9 @@ Requests/sec:   1994.33
 Transfer/sec:    463.52KB
 ```
 
+### Checklist
+
+- application available everywhere
+- raven and statsd responses limited
+- graceful shutdown
+
