@@ -45,6 +45,7 @@ async def format_exceptions(request, handler):
     try:
         # If no exception raised - return response straight away
         return await handler(request)
+        # Note: i can access view class instance by handler.__self__
 
     # Jsonify any http exception on wrong url
     except web.HTTPException as ex:
@@ -64,6 +65,8 @@ async def format_exceptions(request, handler):
     }
     log.app_logger.info(traceback_str)
     # TODO: mb handle ensure json
+    # TODO: here might go fire and forget coroutines, like sending stats and exceptions
+    # https://stackoverflow.com/questions/37278647/fire-and-forget-python-async-await
     return web.json_response(response, status=status)
 
 
