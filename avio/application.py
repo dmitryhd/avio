@@ -1,11 +1,11 @@
 import time
-import traceback
 
 from aiohttp import web
 
 import avio.default_handlers as default_handlers
 from avio.config import get_config_from_env
 import avio.log as log
+import avio.default_middleware as default_middleware
 
 
 def run_app(app):
@@ -23,59 +23,15 @@ def setup_default_routes(app: web.Application):
     app.router.add_view('/_info_detailed', default_handlers.DetailedInfoHandler)
 
 
-UNHANDLED_ERROR_MESSAGE = 'Wild error occured!'
-
-
-@web.middleware
-async def format_exceptions(request, handler):
-    """
-    Middleware, that leaves responses, that don't raise exceptions unchanged.
-
-    Converts all errors to common format, containing
-    - http error code
-    - human readable message
-    - traceback
-
-    NOTE: on json handling https://aiohttp.readthedocs.io/en/stable/web_advanced.html#example
-    """
-
-    status = 200
-    message = ''
-    traceback_str = ''
-    try:
-        # If no exception raised - return response straight away
-        return await handler(request)
-        # Note: i can access view class instance by handler.__self__
-
-    # Jsonify any http exception on wrong url
-    except web.HTTPException as ex:
-        status = ex.status
-        traceback_str = traceback.format_exc()
-        message = ex.reason
-
-    except Exception:
-        status = 500
-        traceback_str = traceback.format_exc()
-        message = UNHANDLED_ERROR_MESSAGE
-
-    response = {
-        'code': status,
-        'message': message,
-        'traceback': traceback_str,  # TODO: make traceback optional
-    }
-    log.app_logger.info(traceback_str)
-    # TODO: mb handle ensure json
-    # TODO: here might go fire and forget coroutines, like sending stats and exceptions
-    # https://stackoverflow.com/questions/37278647/fire-and-forget-python-async-await
-    return web.json_response(response, status=status)
-
-
 def make_app(config: dict = None) -> web.Application:
     """
     Creates application.
     If config dict not specified, yaml file in env CONFIG_PAT will be readed, else empty config passed
     """
-    app = web.Application(middlewares=[format_exceptions])
+    app = web.Application(middlewares=[
+        default_middleware.format_exceptions,
+        default_middleware.measure_time,
+    ])
     if not config:
         config = get_config_from_env()
     app['config'] = config

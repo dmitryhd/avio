@@ -16,7 +16,7 @@ _Work in progress_
 - [x] configuration from ENV
 ## v0.3
 - [ ] statsd
-- [ ] measure handler time
+- [x] measure handler time
 - [ ] raven
 - [ ] json logger
 ## v0.4

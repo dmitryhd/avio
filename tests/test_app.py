@@ -1,6 +1,7 @@
 from aiohttp import web
 import pytest
 
+import avio.default_middleware
 from avio import application
 
 
@@ -35,7 +36,7 @@ async def test_error_handler(cli):
 
     assert 500 == response.status
     assert 500 == response_json['code']
-    assert application.UNHANDLED_ERROR_MESSAGE == response_json['message']
+    assert avio.default_middleware.UNHANDLED_ERROR_MESSAGE == response_json['message']
     assert response_json['traceback'].startswith('Traceback (most recent call last):\n  File')
 
 

@@ -1,4 +1,6 @@
+import time
 import logging
+from contextlib import contextmanager
 
 from aiohttp import web
 
@@ -6,6 +8,11 @@ import avio.log as log
 
 
 class ApiHandler(web.View):
+    TIMER_PRECISION = 3
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.timers = {}  # Timer name -> seconds passed
 
     @property
     def app(self) -> web.Application:
@@ -28,3 +35,10 @@ class ApiHandler(web.View):
 
     def finalize(self, response: dict):
         return web.json_response(response)
+
+    @contextmanager
+    def timeit(self, timer_name: str):
+        start_ts = time.time()
+        yield
+        end_ts = time.time()
+        self.timers[timer_name] = round(end_ts - start_ts, self.TIMER_PRECISION)
