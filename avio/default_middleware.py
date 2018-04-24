@@ -1,3 +1,7 @@
+"""
+Doc on middlewares
+https://docs.aiohttp.org/en/stable/web_advanced.html#middlewares
+"""
 import traceback
 
 from aiohttp import web
@@ -27,7 +31,6 @@ async def format_exceptions(request, handler):
     try:
         # If no exception raised - return response straight away
         return await handler(request)
-        # Note: i can access view class instance by handler.__self__
 
     # Jsonify any http exception on wrong url
     except web.HTTPException as ex:
@@ -54,14 +57,18 @@ async def format_exceptions(request, handler):
 
 @web.middleware
 async def measure_time(request, handler):
+    """
+    Internally, a single request handler is constructed by applying the middleware chain to the original handler
+    in reverse order, and is called by the RequestHandler as a regular handler.
 
-    handler_instance = handler.__self__
+    So, this middleware should be called first and specified last!
+    """
 
-    if issubclass(handler, ApiHandler):
-    # Note: only api calls can mea
+    if issubclass(handler, ApiHandler):  # Note: only api calls can measure time
+        handler_instance = handler(request)
         with handler_instance.timeit('response'):
-            response = await handler(request)
-        log.app_logger.info(f'Response took {handler_instance.timer["response"]:.3f} s')
+            response = await handler_instance
+        log.app_logger.info(f'Response took {handler_instance.timers["response"]:.3f} s')
     else:
         response = await handler(request)
 
