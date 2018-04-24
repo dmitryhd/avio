@@ -25,6 +25,7 @@ _Work in progress_
 ## v0.4
 - [ ] periodic task to update (https://aiohttp.readthedocs.io/en/stable/web_advanced.html#background-tasks1)
 - [ ] redis client
+- [ ] handler time metrics by error codes
 ## v0.5
 - [ ] mongodb adapter
 - [ ] sphinx adapter

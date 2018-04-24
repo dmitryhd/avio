@@ -66,9 +66,11 @@ async def measure_time(request, handler):
 
     if issubclass(handler, ApiHandler):  # Note: only api calls can measure time
         handler_instance = handler(request)
-        with handler_instance.timeit('response'):
-            response = await handler_instance
-        log.app_logger.info(f'Response took {handler_instance.timers["response"]:.3f} s')
+        try:
+            with handler_instance.timeit('response'):
+                return await handler_instance
+        finally:
+            log.app_logger.info(f'Response took {handler_instance.timers["response"]:.3f} s')
     else:
         response = await handler(request)
 
