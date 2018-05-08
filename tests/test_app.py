@@ -55,8 +55,6 @@ async def test_method_not_allowed(cli):
     assert 405 == payload['code']
     assert 'Method Not Allowed' == payload['message']
 
-# TODO: test return unicode json in response
-
 
 async def test_echo_handler(cli):
     post_body = {'some_key': 'some_val даже с utf8'}

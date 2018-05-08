@@ -2,13 +2,17 @@ import time
 
 from aiohttp import web
 
-import avio.default_handlers as default_handlers
-from avio.config import get_config_from_env
 import avio.log as log
 import avio.default_middleware as default_middleware
+import avio.default_handlers as default_handlers
+from avio.config import get_config_from_env
 
 
 def run_app(app):
+    """
+    Starts application server.
+    Host and port specified in app['config'] dict
+    """
     web.run_app(
         app,
         host=app['config'].get('app_host', '0.0.0.0'),
@@ -46,5 +50,4 @@ def make_app(config: dict = None) -> web.Application:
 # https://stackoverflow.com/questions/32819231/
 # class-based-views-in-aiohttp?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qahello
 # The code doesn't recreate BaseView for every request
-
 # https://aiohttp.readthedocs.io/en/stable/web_advanced.html#middlewares
