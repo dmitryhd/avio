@@ -1,5 +1,4 @@
 from aiohttp import web
-import pytest
 
 import avio.default_middleware
 from avio import application
@@ -8,19 +7,6 @@ from avio import application
 def test_create_app():
     app = application.make_app()
     assert isinstance(app, web.Application)
-
-
-def get_test_app() -> web.Application:
-    config = {}
-    return application.make_app(config=config)
-
-
-@pytest.fixture
-def cli(loop, aiohttp_client):
-    # Enable debug output
-    loop.set_debug(True)
-    app = get_test_app()
-    return loop.run_until_complete(aiohttp_client(app))
 
 
 async def test_info(cli):
