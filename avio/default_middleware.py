@@ -2,6 +2,7 @@
 Doc on middlewares
 https://docs.aiohttp.org/en/stable/web_advanced.html#middlewares
 """
+import time
 import traceback
 
 from aiohttp import web
@@ -25,9 +26,6 @@ async def format_exceptions(request, handler):
     NOTE: on json handling https://aiohttp.readthedocs.io/en/stable/web_advanced.html#example
     """
 
-    status = 200
-    message = ''
-    traceback_str = ''
     try:
         # If no exception raised - return response straight away
         return await handler(request)
@@ -66,11 +64,15 @@ async def measure_time(request, handler):
 
     if issubclass(handler, ApiHandler):  # Note: only api calls can measure time
         handler_instance = handler(request)
+        start = time.time()
         try:
             with handler_instance.timeit('response'):
                 return await handler_instance
         finally:
-            log.app_logger.info(f'Response took {handler_instance.timers["response"]:.3f} s')
+            end = time.time()
+            elapsed = end - start
+            handler_instance.timers["response"] = elapsed
+            log.app_logger.info(f'response took {handler_instance.timers["response"]:.3f} s')
     else:
         response = await handler(request)
 
