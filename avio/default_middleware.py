@@ -66,8 +66,7 @@ async def measure_time(request, handler):
         handler_instance = handler(request)
         start = time.time()
         try:
-            with handler_instance.timeit('response'):
-                return await handler_instance
+            return await handler_instance
         finally:
             end = time.time()
             elapsed = end - start

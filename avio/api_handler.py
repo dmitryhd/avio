@@ -27,13 +27,14 @@ class ApiHandler(web.View):
         # TODO: mb make it read only?)
         return self.app['config']
 
-    # TODO: time measure goes here
-
     async def request_json(self) -> dict:
         # TODO: scheme validation goes here
         return await self.request.json()
 
-    def finalize(self, response: dict):
+    def finalize(self, response: dict) -> web.Response:
+        """
+        Serializes response
+        """
         return web.json_response(response)
 
     @contextmanager
