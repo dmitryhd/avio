@@ -15,24 +15,25 @@ _Work in progress_
 - [x] configuration file 
 - [x] configuration from ENV
 ## v0.3
-- [ ] statsd
 - [x] measure handler time
-- [ ] raven
-- [ ] json logger
-## v0.4
-- [ ] Modularized application builder
+- [ ] http clients
 - [ ] smart stub (delay, errors, json responses, bursts)
 - [ ] performance benchmark vs tornado
 ## v0.4
+- [ ] statsd
+- [ ] raven
+- [ ] json logger
+- [ ] handler time metrics by error codes
+- [ ] jsonschema validation
+## v0.5
 - [ ] periodic task to update (https://aiohttp.readthedocs.io/en/stable/web_advanced.html#background-tasks1)
 - [ ] redis client
-- [ ] handler time metrics by error codes
-## v0.5
+## v0.6
 - [ ] mongodb adapter
 - [ ] sphinx adapter
-## v0.6
-- [ ] microservice clients
-- [ ] jsonschema validation
+## v0.7
+- [ ] Modularized application builder
+
 ## opt
 - [x] benchmark
 - [ ] benchmark vs tornado
