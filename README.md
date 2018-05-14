@@ -16,7 +16,7 @@ _Work in progress_
 - [x] configuration from ENV
 ## v0.3
 - [x] measure handler time
-- [ ] http clients
+- [x] http clients
 - [ ] smart stub (delay, errors, json responses, bursts)
 - [ ] performance benchmark vs tornado
 ## v0.4
