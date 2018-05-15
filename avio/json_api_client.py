@@ -65,7 +65,8 @@ class JsonApiClient:
         async with async_timeout.timeout(self._timeout_seconds, loop=self.loop):
             async with future as resp:
                 response.status = resp.status
-                response.json = await resp.json()
+                # Note: treat all mime types as json
+                response.json = await resp.json(content_type=None)
                 response.is_timeouted = False
         response.seconds_run = time.time() - btime
         return response
