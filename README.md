@@ -17,6 +17,7 @@ _Work in progress_
 ## v0.3
 - [x] measure handler time
 - [x] http clients
+- [ ] test handler (several responses)
 - [ ] smart stub (delay, errors, json responses, bursts)
 - [ ] performance benchmark vs tornado
 ## v0.4
