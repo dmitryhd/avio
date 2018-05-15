@@ -18,9 +18,11 @@ class SampleHandler(ApiHandler):
     async def get(self):
         btime = time.time()
         cli = self.app['client']
-        res = await cli.get('')
+        milliseconds_to_sleep = 50
+        url = f'/?sleep_milliseconds={milliseconds_to_sleep}'
+        res = await cli.get(url)
         print(cli)
-        futures = [cli.get(''), cli.get(''), cli.get('')]
+        futures = [cli.get(url), cli.get(url), cli.get(url)]
         results = await asyncio.gather(*futures)
         print(results)
         elapsed = time.time() - btime
