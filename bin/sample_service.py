@@ -41,6 +41,13 @@ class SampleHandler(ApiHandler):
         })
 
 
+class SleepHandler(ApiHandler):
+
+    async def get(self):
+        await asyncio.sleep(self.request.rel_url.query.get('sleep', 0.1))
+        return self.finalize({})
+
+
 def main():
     app = make_app()
 
@@ -48,6 +55,7 @@ def main():
     app['client'] = client
 
     app.router.add_view('/sample', SampleHandler)
+    app.router.add_view('/sleep', SleepHandler)
 
     run_app(app)
 

@@ -19,6 +19,7 @@ _Work in progress_
 - [x] http clients
 - [x] dump stub get json responses
 - [x] test handler (several responses)
+- [ ]
 - [ ] smart stub (delay, errors, json responses, bursts)
 - [ ] performance benchmark vs tornado
 ## v0.4
