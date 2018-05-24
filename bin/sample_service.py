@@ -61,7 +61,6 @@ def main():
     app['client'] = client
 
     app.router.add_view('/sample', SampleHandler)
-    app.router.add_view('/sleep', SleepHandler100)
     app.router.add_view('/sleep100', SleepHandler100)
     app.router.add_view('/sleep50', SleepHandler50)
 
