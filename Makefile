@@ -45,5 +45,8 @@ coverage: clean
 	                $(TESTS_ARGS)
 check: pep8
 
+jupyter:
+	jupyter notebook benchmark
+
 pep8:
 	$(PEP8) $(SOURCE_DIR) $(TESTS_DIR) $(BIN_DIR)

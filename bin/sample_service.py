@@ -41,10 +41,16 @@ class SampleHandler(ApiHandler):
         })
 
 
-class SleepHandler(ApiHandler):
+class SleepHandler50(ApiHandler):
 
     async def get(self):
-        await asyncio.sleep(self.request.rel_url.query.get('sleep', 0.1))
+        await asyncio.sleep(self.request.rel_url.query.get('sleep', 0.05))
+        return self.finalize({})
+
+class SleepHandler100(ApiHandler):
+
+    async def get(self):
+        await asyncio.sleep(self.request.rel_url.query.get('sleep', 0.100))
         return self.finalize({})
 
 
@@ -55,7 +61,9 @@ def main():
     app['client'] = client
 
     app.router.add_view('/sample', SampleHandler)
-    app.router.add_view('/sleep', SleepHandler)
+    app.router.add_view('/sleep', SleepHandler100)
+    app.router.add_view('/sleep100', SleepHandler100)
+    app.router.add_view('/sleep50', SleepHandler50)
 
     run_app(app)
 
