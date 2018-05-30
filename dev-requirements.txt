@@ -3,3 +3,4 @@ jupyter
 matplotlib
 autopep8
 seaborn
+locustio==0.8.1

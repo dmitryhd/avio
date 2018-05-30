@@ -20,6 +20,8 @@ _Work in progress_
 - [x] dump stub get json responses
 - [x] test handler (several responses)
 - [ ] jupyter autobenchmark
+- [ ] reliable benchmark 
+- [ ] check locustio
 - [ ] smart stub (delay, errors, json responses, bursts)
 - [ ] performance benchmark vs tornado
 ## v0.4
