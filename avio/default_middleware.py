@@ -6,6 +6,7 @@ import time
 import traceback
 
 from aiohttp import web
+import asyncio
 
 from avio.api_handler import ApiHandler
 from avio import log as log
@@ -70,8 +71,9 @@ async def measure_time(request, handler):
         finally:
             end = time.time()
             elapsed = end - start
-            handler_instance.timers["response"] = elapsed
-            log.app_logger.info(f'response took {handler_instance.timers["response"]:.3f} s')
+            handler_instance.timers['response'] = elapsed
+            num_tasks = len(asyncio.Task.all_tasks())
+            log.app_logger.info(f'response took {handler_instance.timers["response"]:.3f} s, {num_tasks:,} running')
     else:
         response = await handler(request)
 

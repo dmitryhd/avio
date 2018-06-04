@@ -1,6 +1,8 @@
 import time
 
 from aiohttp import web
+import asyncio
+import uvloop
 
 import avio.log as log
 import avio.default_middleware as default_middleware
@@ -32,17 +34,22 @@ def make_app(config: dict = None) -> web.Application:
     Creates application.
     If config dict not specified, yaml file in env CONFIG_PAT will be readed, else empty config passed
     """
+    if not config:
+        config = get_config_from_env()
+    log.configure_app_logger(logger_config=config.get('logging'))
+
+    # TODO: make a parameter
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    log.app_logger.info('Using uvloop')
+
     app = web.Application(middlewares=[
         default_middleware.format_exceptions,
         default_middleware.measure_time,
     ])
-    if not config:
-        config = get_config_from_env()
     app['config'] = config
     app['start_ts'] = time.time()
     setup_default_routes(app)
 
-    log.configure_app_logger(logger_config=config.get('logging'))
     return app
 
 

@@ -4,7 +4,7 @@ def sleep50(l):
     l.client.get("/sleep50")
 
 class UserBehavior(TaskSet):
-    tasks = {sleep50: 1}
+    tasks = {sleep50: 10}
 
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior
