@@ -28,14 +28,10 @@ class StatsdBuffer:
     https://github.com/b/statsd_spec
     https://github.com/etsy/statsd/blob/master/docs/metric_types.md
     """
-    def __init__(self,
-                 prefix='',
-                 force_int=True,
-                 maxlen=None):
-
+    def __init__(self, prefix='', force_int=True, max_messages=None):
         self._prefix = prefix + '.' if not prefix.endswith('.') else prefix
         self._force_int = force_int
-        self._data = deque(maxlen=maxlen)
+        self._data = deque(maxlen=max_messages)
         self._size = 0
 
     @property
@@ -97,9 +93,13 @@ class StatsdBuffer:
             _type=_type
         )
 
-    def _append(self, data):
+    def _append(self, data: str):
         self._data.append(data)
         self._size += len(data)
+
+    def extend(self, buffer):
+        self._data.extend(buffer._data)
+        self._size += len(buffer.to_bytes)
 
     def __len__(self):
         return self.size
@@ -121,6 +121,8 @@ class StatsdClient:
     https://github.com/b/statsd_spec
     https://github.com/etsy/statsd/blob/master/docs/metric_types.md
     """
+    # TODO: send by chunks
+    PACKET_SIZE_BYTES = 1430
 
     def __init__(self, host=STATSD_HOST, port=STATSD_PORT, loop=None, logger=None):
         self._loop = loop or asyncio.get_event_loop()
@@ -134,10 +136,13 @@ class StatsdClient:
 
     async def send_buffer(self, buffer: StatsdBuffer):
         try:
-            await sendto(self._loop, self._udp_sock, buffer.to_bytes, self._addr)
+            data_to_send = buffer.to_bytes
+            if not len(data_to_send):
+                return
+            buffer.clear()
+            await sendto(self._loop, self._udp_sock, data_to_send, self._addr)
         except:
             log.exception('cant send data')
-        buffer.clear()
 
 
 def sendto(loop, sock, data, addr, fut=None, registed=False):

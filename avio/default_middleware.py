@@ -13,6 +13,8 @@ from avio import log as log
 
 UNHANDLED_ERROR_MESSAGE = 'Wild error occured!'
 
+# TODO: document middlewares
+
 
 @web.middleware
 async def format_exceptions(request, handler):

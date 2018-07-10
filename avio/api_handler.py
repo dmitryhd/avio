@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from aiohttp import web
 
 import avio.log as log
+import avio.statsd as statsd
 
 
 class ApiHandler(web.View):
@@ -13,6 +14,7 @@ class ApiHandler(web.View):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.timers = {}  # Timer name -> seconds passed
+        # self.stats_buffer = statsd.StatsdBuffer(self.config)
 
     @property
     def app(self) -> web.Application:
