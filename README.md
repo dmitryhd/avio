@@ -19,25 +19,31 @@ _Work in progress_
 - [x] http clients
 - [x] dump stub get json responses
 - [x] test handler (several responses)
-- [ ] jupyter autobenchmark
-- [ ] reliable benchmark 
-- [ ] check locustio
-- [ ] smart stub (delay, errors, json responses, bursts)
-- [ ] performance benchmark vs tornado
+- [x] jupyter autobenchmark
+- [x] reliable benchmark 
+- [x] check locustio
 ## v0.4
 - [x] statsd
-- [ ] raven
 - [ ] json logger
+- [ ] raven
 - [ ] handler time metrics by error codes
-- [ ] jsonschema validation
+- [ ] default values at config
 ## v0.5
+- [ ] run benchmark at macos
+- [ ] pyflame profile
+- [ ] smart stub (delay, errors, json responses, bursts)
+- [ ] performance benchmark vs tornado
 - [ ] periodic task to update (https://aiohttp.readthedocs.io/en/stable/web_advanced.html#background-tasks1)
 - [ ] redis client
+- [ ] readiness/liveliness probe
+- [ ] swagger autodoc
 ## v0.6
+- [ ] jsonschema validation
 - [ ] mongodb adapter
 - [ ] sphinx adapter
 ## v0.7
 - [ ] Modularized application builder
+- [ ] 
 
 ## opt
 - [x] benchmark
