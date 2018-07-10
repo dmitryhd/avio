@@ -63,7 +63,7 @@ async def measure_time(request, handler):
     So, this middleware should be called first and specified last!
     """
 
-    if issubclass(handler, ApiHandler):  # Note: only api calls can measure time
+    if isinstance(handler, ApiHandler):  # Note: only api calls can measure time
         handler_instance = handler(request)
         start = time.time()
         try:

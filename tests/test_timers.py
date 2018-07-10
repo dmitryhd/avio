@@ -14,9 +14,10 @@ async def test_timeit_async():
 async def test_timeit_sync():
     handler = ApiHandler(None)
     sleep_time = 0.01
+    precision = 2
     with handler.timeit('time1'):
         time.sleep(sleep_time)
     with handler.timeit('time2'):
         time.sleep(sleep_time)
-    assert sleep_time == round(handler.timers['time1'], 2)
-    assert sleep_time == round(handler.timers['time2'], 2)
+    assert round(sleep_time, precision) == round(handler.timers['time1'], precision)
+    assert round(sleep_time, precision) == round(handler.timers['time2'], precision)

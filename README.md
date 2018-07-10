@@ -25,7 +25,7 @@ _Work in progress_
 - [ ] smart stub (delay, errors, json responses, bursts)
 - [ ] performance benchmark vs tornado
 ## v0.4
-- [ ] statsd
+- [x] statsd
 - [ ] raven
 - [ ] json logger
 - [ ] handler time metrics by error codes
