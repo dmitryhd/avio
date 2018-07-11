@@ -92,3 +92,4 @@ async def test_metrics_info(cli):
     payload = await resp.json()
     assert {'result': 'ok'} == payload
     assert resp.status == 200
+    assert [b'response:0|ms\n'] == cli.app['metrics_sender'].metrics

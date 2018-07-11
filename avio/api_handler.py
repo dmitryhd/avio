@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from aiohttp import web
 
 import avio.log as log
+from avio.metrics import MetricsBuffer
 
 
 class ApiHandler(web.View):
@@ -12,8 +13,14 @@ class ApiHandler(web.View):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.timers = {}  # Timer name -> seconds passed
-        # self.stats_buffer = statsd.StatsdBuffer(self.config)
+
+    @property
+    def timers(self) -> dict:
+        return self.request.timers
+
+    @property
+    def metrics_buffer(self) -> MetricsBuffer:
+        return self.request.metrics_buffer
 
     @property
     def app(self) -> web.Application:
@@ -26,7 +33,7 @@ class ApiHandler(web.View):
     @property
     def config(self) -> dict:
         # TODO: mb make it read only?)
-        return self.app['config']
+        return self.request.app['config']
 
     async def request_json(self) -> dict:
         # TODO: scheme validation goes here

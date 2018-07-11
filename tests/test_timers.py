@@ -4,7 +4,9 @@ from avio.api_handler import ApiHandler
 
 
 async def test_timeit_async():
-    handler = ApiHandler(None)
+    class Request:
+        timers = {}
+    handler = ApiHandler(Request())
     sleep_time = 0.01
     with handler.timeit('time1'):
         await asyncio.sleep(0.01)
@@ -12,7 +14,9 @@ async def test_timeit_async():
 
 
 async def test_timeit_sync():
-    handler = ApiHandler(None)
+    class Request:
+        timers = {}
+    handler = ApiHandler(Request())
     sleep_time = 0.01
     precision = 2
     with handler.timeit('time1'):

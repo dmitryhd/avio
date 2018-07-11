@@ -42,9 +42,10 @@ def make_app(config: dict = None) -> web.Application:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     log.app_logger.info('Using uvloop')
 
+    # TODO: mb just modiry View for this?
     app = web.Application(middlewares=[
         default_middleware.format_exceptions,
-        default_middleware.measure_time,
+        default_middleware.measure_time_and_send_metrics,
     ])
     app['config'] = config
     app['start_ts'] = time.time()

@@ -8,8 +8,9 @@ import traceback
 from aiohttp import web
 import asyncio
 
-from avio.api_handler import ApiHandler
 from avio import log as log
+from avio.metrics import MetricsBuffer
+
 
 UNHANDLED_ERROR_MESSAGE = 'Wild error occured!'
 
@@ -57,7 +58,7 @@ async def format_exceptions(request, handler):
 
 
 @web.middleware
-async def measure_time(request, handler):
+async def measure_time_and_send_metrics(request, handler):
     """
     Internally, a single request handler is constructed by applying the middleware chain to the original handler
     in reverse order, and is called by the RequestHandler as a regular handler.
@@ -65,18 +66,20 @@ async def measure_time(request, handler):
     So, this middleware should be called first and specified last!
     """
 
-    if isinstance(handler, ApiHandler):  # Note: only api calls can measure time
-        handler_instance = handler(request)
-        start = time.time()
-        try:
-            return await handler_instance
-        finally:
-            end = time.time()
-            elapsed = end - start
-            handler_instance.timers['response'] = elapsed
-            num_tasks = len(asyncio.Task.all_tasks())
-            log.app_logger.info(f'response took {handler_instance.timers["response"]:.3f} s, {num_tasks:,} running')
-    else:
-        response = await handler(request)
+    start = time.time()
+    request.timers = {}
+    request.metrics_buffer = MetricsBuffer()
+    try:
+        return await handler(request)
+    finally:
+        end = time.time()
+        elapsed = end - start
+        request.timers['response'] = elapsed
 
-    return response
+        for timer_name, seconds in request.timers.items():
+            request.metrics_buffer.timing(timer_name, seconds * 1000)  # NOTE: conversion to ms.
+
+        await request.app['metrics_sender'].send_buffer(request.metrics_buffer)
+
+        num_tasks = len(asyncio.Task.all_tasks())
+        log.app_logger.info(f'response took {request.timers["response"]:.3f} s, {num_tasks:,} running')
