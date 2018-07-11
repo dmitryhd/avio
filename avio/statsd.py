@@ -15,10 +15,18 @@ https://github.com/qntln/fastatsd
 
 
 from collections import deque
+from typing import List, Union
 import socket
 import asyncio
-from typing import Union
 import logging
+
+# This is most likely for Intranets.
+FAST_ETHERNET_MTU = 1432
+# Jumbo frames can make use of this feature much more efficient.
+GIGABIT_ETHERNET_MTU = 8932
+# Commodity Internet
+COMMODITY_INTERNET_MTU = 512
+
 
 
 class StatsdBuffer:
@@ -28,22 +36,14 @@ class StatsdBuffer:
     https://github.com/b/statsd_spec
     https://github.com/etsy/statsd/blob/master/docs/metric_types.md
     """
-    def __init__(self, prefix='', force_int=True, max_messages=None):
-        self._prefix = prefix + '.' if not prefix.endswith('.') else prefix
+    def __init__(self, force_int=True, max_messages=None):
         self._force_int = force_int
         self._data = deque(maxlen=max_messages)
         self._size = 0
 
     @property
-    def data(self):
+    def data(self) -> List[bytes]:
         return list(self._data)
-
-    @property
-    def to_bytes(self) -> bytes:
-        return b''.join(
-            entry if isinstance(entry, bytes) else entry.encode('utf8')
-            for entry in self._data
-        )
 
     def clear(self):
         self._data = deque()
@@ -54,19 +54,19 @@ class StatsdBuffer:
         return self._size
 
     def gauge(self, name, value):
-        self._send(name, value, 'g')
+        self._set_metric(name, value, b'g')
 
     def timing(self, name, value):
-        self._send(name, value, 'ms')
+        self._set_metric(name, value, b'ms')
 
     def histogram(self, name, value):
-        self._send(name, value, 'h')
+        self._set_metric(name, value, b'h')
 
     def set(self, name, value):
-        self._send(name, value, 's')
+        self._set_metric(name, value, b's')
 
     def count(self, name, value):
-        self._send(name, value, 'c')
+        self._set_metric(name, value, b'c')
 
     def incr(self, name, value=1):
         self.count(name, value)
@@ -74,32 +74,26 @@ class StatsdBuffer:
     def decr(self, name, value=1):
         self.count(name, -value)
 
-    def _send(self, name: str, value, _type):
-        """
-        Generic method to send metric to statsd server.
-
-        :param name: metric name
-        :param value: metric value
-        :param _type: metric type modifier
-        """
-        data = self._format(name=name, value=value, _type=_type)
-        self._append(data)
-
-    def _format(self, name, value, _type) -> str:
-        return '{prefix}{name}:{value}|{_type}\n'.format(
-            prefix=self._prefix,
-            name=name,
-            value=int(value) if self._force_int else value,
-            _type=_type
+    def _format(self, name: Union[str, bytes], value: Union[int, float], _type: Union[str, bytes]) -> bytes:
+        name = name if isinstance(name, bytes) else name.encode('utf8')
+        _type = _type if isinstance(_type, bytes) else _type.encode('utf8')
+        return b'%s:%d|%s\n' % (
+            name,
+            int(value) if self._force_int else value,
+            _type,
         )
 
-    def _append(self, data: str):
+    def _set_metric(self, name: Union[str, bytes], value: Union[int, float], _type: Union[str, bytes]):
+        data = self._format(name=name, value=value, _type=_type)
         self._data.append(data)
         self._size += len(data)
 
     def extend(self, buffer):
+        """
+        Adds another buffer to current buffer at the end of queue.
+        """
         self._data.extend(buffer._data)
-        self._size += len(buffer.to_bytes)
+        self._size += sum((len(entry) for entry in buffer._data))
 
     def __len__(self):
         return self.size
@@ -108,6 +102,44 @@ class StatsdBuffer:
         return len(self) > 0
 
     __nonzero__ = __bool__
+
+    def split_to_packets(self, prefix: Union[str, bytes] = '', packet_size_bytes: int = FAST_ETHERNET_MTU) -> List[bytes]:
+        """
+        :param prefix: statsd prefix. Example: 'service.rec.app.01'
+        :param packet_size_bytes: maximum size of packet to avoid fragmentation
+        :return: list of bytes, each element == payload of upd packet, ready to be sent
+        """
+        if isinstance(prefix, str):
+            if prefix.endswith('.'):
+                prefix = prefix[:-1]
+            if prefix:
+                prefix = prefix + '.'
+            prefix = prefix.encode('utf8')
+
+        prefix_len = len(prefix)
+
+        packets = []
+        current_packet_entries = []
+        current_packet_size = 0
+        for entry in self._data:
+
+            # Start filling new packet
+            if current_packet_size + len(entry) + prefix_len > packet_size_bytes:
+                packets.append(b''.join(current_packet_entries))
+                current_packet_entries.clear()
+                current_packet_size = 0
+
+            formatted_entry = prefix + entry
+            current_packet_entries.append(formatted_entry)
+            current_packet_size += len(formatted_entry)
+
+        # last packet
+        if current_packet_size:
+            packets.append(b''.join(current_packet_entries))
+            current_packet_entries.clear()
+
+        return packets
+
 
 
 STATSD_HOST = 'localhost'
@@ -121,28 +153,49 @@ class StatsdClient:
     https://github.com/b/statsd_spec
     https://github.com/etsy/statsd/blob/master/docs/metric_types.md
     """
-    # TODO: send by chunks
-    PACKET_SIZE_BYTES = 1430
 
-    def __init__(self, host=STATSD_HOST, port=STATSD_PORT, loop=None, logger=None):
+    def __init__(self, host=STATSD_HOST, port=STATSD_PORT, prefix='', loop=None, logger=None, packet_size_bytes: int = FAST_ETHERNET_MTU):
+        self._prefix = prefix
+        self._packet_size_bytes = packet_size_bytes
         self._loop = loop or asyncio.get_event_loop()
         self._addr = (host, port)
         self._udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._udp_sock.setblocking(False)
-        self._logger = logger or logging.getLogger('statsd')
+        if logger:
+            self._logger = logger
+        else:
+            logger = logging.getLogger('statsd')
+            logger.setLevel(logging.DEBUG)
+            ch = logging.StreamHandler()
+            ch.setLevel(logging.DEBUG)
+            logger.addHandler(ch)
+            self._logger = logger
+
 
     def close(self):
         self._udp_sock.close()
 
-    async def send_buffer(self, buffer: StatsdBuffer):
+    async def send_buffer(self, buffer: StatsdBuffer) -> int:
+        """
+        Note: during send buffer you can always safely add new metrics to this buffer.
+        :return: number of bytes sent
+        """
         try:
-            data_to_send = buffer.to_bytes
-            if not len(data_to_send):
-                return
+
+            # Strip information to be sent from this buffer
+            packets_to_send = buffer.split_to_packets(self._prefix, packet_size_bytes=self._packet_size_bytes)
+            if not len(packets_to_send):
+                return 0
             buffer.clear()
-            await sendto(self._loop, self._udp_sock, data_to_send, self._addr)
+
+            # Start sending packets, now anything new can be added to this buffer
+            bytes_sent = 0
+            for packet in packets_to_send:
+                bytes_sent += await sendto(self._loop, self._udp_sock, packet, self._addr)
+            return bytes_sent
         except:
-            log.exception('cant send data')
+            self._logger.exception('Cant send statsd data')
+            return 0
 
 
 def sendto(loop, sock, data, addr, fut=None, registed=False):
