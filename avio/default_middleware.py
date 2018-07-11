@@ -51,9 +51,6 @@ async def format_exceptions(request, handler):
         'traceback': traceback_str,  # TODO: make traceback optional
     }
     log.app_logger.info(traceback_str)
-    # TODO: mb handle ensure json
-    # TODO: here might go fire and forget coroutines, like sending stats and exceptions
-    # https://stackoverflow.com/questions/37278647/fire-and-forget-python-async-await
     return web.json_response(response, status=status)
 
 
@@ -66,9 +63,9 @@ async def measure_time_and_send_metrics(request, handler):
     So, this middleware should be called first and specified last!
     """
 
-    start = time.time()
     request.timers = {}
     request.metrics_buffer = MetricsBuffer()
+    start = time.time()
     try:
         return await handler(request)
     finally:
@@ -79,7 +76,10 @@ async def measure_time_and_send_metrics(request, handler):
         for timer_name, seconds in request.timers.items():
             request.metrics_buffer.timing(timer_name, seconds * 1000)  # NOTE: conversion to ms.
 
+        # TODO: here might go fire and forget coroutines, like sending stats and exceptions
+        # https://stackoverflow.com/questions/37278647/fire-and-forget-python-async-await
         await request.app['metrics_sender'].send_buffer(request.metrics_buffer)
 
+        # TODO: remove later
         num_tasks = len(asyncio.Task.all_tasks())
         log.app_logger.info(f'response took {request.timers["response"]:.3f} s, {num_tasks:,} running')
