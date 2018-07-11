@@ -7,7 +7,7 @@ import uvloop
 import avio.log as log
 import avio.default_middleware as default_middleware
 import avio.default_handlers as default_handlers
-from avio.config import get_config_from_env
+from avio.config import ConfigParser
 
 
 def run_app(app):
@@ -35,7 +35,7 @@ def make_app(config: dict = None) -> web.Application:
     If config dict not specified, yaml file in env CONFIG_PAT will be readed, else empty config passed
     """
     if not config:
-        config = get_config_from_env()
+        config = ConfigParser().read_config()
     log.configure_app_logger(logger_config=config.get('logging'))
 
     # TODO: make a parameter

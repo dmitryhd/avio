@@ -3,7 +3,7 @@ import contextlib
 
 import pytest
 
-import avio.config as config
+from avio.config import ConfigParser
 
 
 @pytest.fixture()
@@ -31,7 +31,7 @@ def config_content():
 
 
 def test_read_yaml(config_file, config_content):
-    result_config = config.read_config(config_file)
+    result_config = ConfigParser.read_config_part(config_file)
     assert config_content == result_config
 
 
@@ -48,32 +48,23 @@ def set_env_var(key, value):
 
 def test_config_from_env(config_file, config_content):
     with set_env_var('CONFIG_PATH', str(config_file)):
-        result_config = config.get_config_from_env()
+        result_config = ConfigParser().read_config()
     assert config_content == result_config
 
 
-@pytest.mark.skip
-def test_config_from_not_existing_env():
-    with pytest.raises(FileNotFoundError):
-        with set_env_var('CONFIG_PATH', 'not_existing_file.yaml'):
-            config.get_config_from_env()
+@pytest.fixture()
+def default_config():
+    return {
+        'int_opt': 1,
+        'float_opt': 0.1,
+        'str_opt': 'st',
+        'list_opt': [1, 2],
+        'dict_opt': {
+            'a': 'b',
+            'c': 'd',
+        }
+    }
 
-
-@contextlib.contextmanager
-def del_env_var(key):
-    original_value = os.getenv(key)
-    try:
-        del os.environ[key]
-    except KeyError:
-        pass
-    yield
-    if original_value is None:
-        del os.environ[key]
-    else:
-        os.environ[key] = str(original_value)
-
-
-@pytest.mark.skip
-def test_config_without_env():
-    with del_env_var('CONFIG_PATH'):
-        assert {} == config.get_config_from_env()
+def test_config_parser():
+    conf_parser = ConfigParser(default_config())
+    assert default_config() == conf_parser.get_config()

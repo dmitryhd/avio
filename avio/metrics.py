@@ -17,9 +17,7 @@ __all__ = (
     'MetricsBuffer',
     'MetricsSender',
     'DummyMetricsSender',
-    'FAST_ETHERNET_MTU',
-    'GIGABIT_ETHERNET_MTU',
-    'COMMODITY_INTERNET_MTU',
+    'MTU',
     'STATSD_PORT',
     'STATSD_HOST',
 )
@@ -31,12 +29,15 @@ import socket
 import asyncio
 import logging
 
-# This is most likely for Intranets.
-FAST_ETHERNET_MTU = 1432
-# Jumbo frames can make use of this feature much more efficient.
-GIGABIT_ETHERNET_MTU = 8932
-# Commodity Internet
-COMMODITY_INTERNET_MTU = 512
+
+class MTU:
+    # This is most likely for Intranets.
+    FAST_ETHERNET = 1432
+    # Jumbo frames can make use of this feature much more efficient.
+    GIGABIT_ETHERNET = 8932
+    # Commodity Internet
+    COMMODITY_INTERNET = 512
+
 
 MAX_MESSAGES_IN_BUFFER = 1000
 
@@ -90,7 +91,7 @@ class MetricsBuffer:
 
     def split_to_packets(self,
                          prefix: Union[str, bytes] = '',
-                         packet_size_bytes: int = FAST_ETHERNET_MTU) -> List[bytes]:
+                         packet_size_bytes: int = MTU.FAST_ETHERNET) -> List[bytes]:
         """
         :param prefix: statsd prefix. Example: 'service.rec.app.01'
         :param packet_size_bytes: maximum size of packet to avoid fragmentation
@@ -168,7 +169,7 @@ class MetricsSender:
                  prefix='',
                  loop=None,
                  logger=None,
-                 packet_size_bytes: int = FAST_ETHERNET_MTU):
+                 packet_size_bytes: int = MTU.FAST_ETHERNET):
 
         self._prefix = prefix
         self._packet_size_bytes = packet_size_bytes
