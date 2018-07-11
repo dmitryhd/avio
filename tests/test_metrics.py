@@ -25,10 +25,19 @@ def test_buffer_extend():
     assert 3 * msg_len == len(buf)
 
 
+def test_max_buffer_size():
+    buf = metrics.MetricsBuffer(max_messages=2)
+    buf.incr('m1', 1)
+    buf.incr('m2', 1)
+    buf.incr('m3', 1)
+    assert [b'm2:1|c\n', b'm3:1|c\n'] == buf.data
+
+
 def test_buffer_split_to_packets_trivial():
     buf = metrics.MetricsBuffer()
     buf.incr('m1', 1)
     assert [b'prefix.m1:1|c\n'] == buf.split_to_packets(prefix='prefix')
+
 
 def test_buffer_split_to_packets_long_prefix():
     buf = metrics.MetricsBuffer()
@@ -66,6 +75,16 @@ async def test_send_metrics_buffer_with_data(loop):
     msg = b'm1:1|c\n'
     client = metrics.MetricsSender(loop=loop, prefix='', packet_size_bytes=len(msg))
     assert len(msg) * 2 == await client.send_buffer(buf)
+
+
+async def test_dummy_metrics_sender(loop):
+    buf = metrics.MetricsBuffer()
+    buf.incr('m1', 1)
+    buf.incr('m1', 1)
+    msg = b'prefix.m1:1|c\n'
+    client = metrics.DummyMetricsSender(loop=loop, prefix='prefix', packet_size_bytes=len(msg))
+    assert 0 == await client.send_buffer(buf)
+    assert [msg, msg] == client.metrics
 
 
 async def test_metrics_info(cli):

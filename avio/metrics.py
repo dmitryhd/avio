@@ -16,6 +16,7 @@ https://github.com/qntln/fastatsd
 __all__ = (
     'MetricsBuffer',
     'MetricsSender',
+    'DummyMetricsSender',
     'FAST_ETHERNET_MTU',
     'GIGABIT_ETHERNET_MTU',
     'COMMODITY_INTERNET_MTU',
@@ -37,10 +38,12 @@ GIGABIT_ETHERNET_MTU = 8932
 # Commodity Internet
 COMMODITY_INTERNET_MTU = 512
 
+MAX_MESSAGES_IN_BUFFER = 1000
+
 
 class MetricsBuffer:
 
-    def __init__(self, force_int=True, max_messages=None):
+    def __init__(self, force_int=True, max_messages=MAX_MESSAGES_IN_BUFFER):
         self._force_int = force_int
         self._data = deque(maxlen=max_messages)
         self._size = 0
@@ -169,10 +172,8 @@ class MetricsSender:
 
         self._prefix = prefix
         self._packet_size_bytes = packet_size_bytes
-        self._loop = loop or asyncio.get_event_loop()
         self._addr = (host, port)
-        self._udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._udp_sock.setblocking(False)
+        self._loop = loop or asyncio.get_event_loop()
 
         if logger:
             self._logger = logger
@@ -183,6 +184,9 @@ class MetricsSender:
             ch.setLevel(logging.DEBUG)
             logger.addHandler(ch)
             self._logger = logger
+
+        self._udp_sock = None
+        self._create_socket()
 
     def close(self):
         self._udp_sock.close()
@@ -203,27 +207,52 @@ class MetricsSender:
             # Start sending packets, now anything new can be added to this buffer
             bytes_sent = 0
             for packet in packets_to_send:
-                bytes_sent += await _send_to(self._loop, self._udp_sock, packet, self._addr)
+                bytes_sent += await self._send_to(self._loop, self._udp_sock, packet, self._addr)
             return bytes_sent
-        except:
+        except:  # noqa
             self._logger.exception('Cant send statsd data')
             return 0
 
+    def _send_to(self, loop, sock, data, addr, fut=None, registed=False):
+        """
+        # https://www.pythonsheets.com/notes/python-asyncio.html
+        :return: Future, resulting in number of bytes sent.
+        """
+        fd = sock.fileno()
+        if fut is None:
+            fut = loop.create_future()
+        if registed:
+            loop.remove_writer(fd)
+        try:
+            n = sock.sendto(data, addr)
+        except (BlockingIOError, InterruptedError):
+            loop.add_writer(fd, self._send_to, loop, sock, data, addr, fut, True)
+        else:
+            fut.set_result(n)
+        return fut
 
-def _send_to(loop, sock, data, addr, fut=None, registed=False):
+    def _create_socket(self):
+        self._udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._udp_sock.setblocking(False)
+
+
+class DummyMetricsSender(MetricsSender):
     """
-    # https://www.pythonsheets.com/notes/python-asyncio.html
-    :return: Future, resulting in number of bytes sent.
+    Simple metrics sender for testing purposes.
     """
-    fd = sock.fileno()
-    if fut is None:
-        fut = loop.create_future()
-    if registed:
-        loop.remove_writer(fd)
-    try:
-        n = sock.sendto(data, addr)
-    except (BlockingIOError, InterruptedError):
-        loop.add_writer(fd, _send_to, loop, sock, data, addr, fut, True)
-    else:
-        fut.set_result(n)
-    return fut
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.metrics = []
+
+    def close(self):
+        pass
+
+    def _create_socket(self):
+        pass
+
+    def _send_to(self, loop, sock, data, addr, fut=None, registed=False):
+        future = loop.create_future()
+        future.set_result(0)
+        self.metrics.append(data)
+        return future

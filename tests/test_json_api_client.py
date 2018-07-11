@@ -15,7 +15,7 @@ async def test_get(test_api_client):
     assert isinstance(resp, api_client.ApiResponse)
     assert {'result': 'ok'} == resp.json
     assert resp.status == 200
-    assert resp.is_timeouted == False
+    assert not resp.is_timeouted
     assert 1 > resp.seconds_run > 0
 
 

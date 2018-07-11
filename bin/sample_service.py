@@ -47,6 +47,7 @@ class SleepHandler50(ApiHandler):
         await asyncio.sleep(self.request.rel_url.query.get('sleep', 0.05))
         return self.finalize({})
 
+
 class SleepHandler100(ApiHandler):
 
     async def get(self):
