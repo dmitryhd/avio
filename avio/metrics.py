@@ -13,6 +13,16 @@ not async
 https://github.com/qntln/fastatsd
 """
 
+__all__ = (
+    'MetricsBuffer',
+    'MetricsSender',
+    'FAST_ETHERNET_MTU',
+    'GIGABIT_ETHERNET_MTU',
+    'COMMODITY_INTERNET_MTU',
+    'STATSD_PORT',
+    'STATSD_HOST',
+)
+
 
 from collections import deque
 from typing import List, Union
@@ -28,14 +38,8 @@ GIGABIT_ETHERNET_MTU = 8932
 COMMODITY_INTERNET_MTU = 512
 
 
+class MetricsBuffer:
 
-class StatsdBuffer:
-    """
-    Protocol description:
-
-    https://github.com/b/statsd_spec
-    https://github.com/etsy/statsd/blob/master/docs/metric_types.md
-    """
     def __init__(self, force_int=True, max_messages=None):
         self._force_int = force_int
         self._data = deque(maxlen=max_messages)
@@ -45,13 +49,20 @@ class StatsdBuffer:
     def data(self) -> List[bytes]:
         return list(self._data)
 
+    @property
+    def size(self):
+        return self._size
+
     def clear(self):
         self._data = deque()
         self._size = 0
 
-    @property
-    def size(self):
-        return self._size
+    def extend(self, buffer):
+        """
+        Adds another buffer to current buffer at the end of queue.
+        """
+        self._data.extend(buffer._data)
+        self._size += sum((len(entry) for entry in buffer._data))
 
     def gauge(self, name, value):
         self._set_metric(name, value, b'g')
@@ -74,36 +85,9 @@ class StatsdBuffer:
     def decr(self, name, value=1):
         self.count(name, -value)
 
-    def _format(self, name: Union[str, bytes], value: Union[int, float], _type: Union[str, bytes]) -> bytes:
-        name = name if isinstance(name, bytes) else name.encode('utf8')
-        _type = _type if isinstance(_type, bytes) else _type.encode('utf8')
-        return b'%s:%d|%s\n' % (
-            name,
-            int(value) if self._force_int else value,
-            _type,
-        )
-
-    def _set_metric(self, name: Union[str, bytes], value: Union[int, float], _type: Union[str, bytes]):
-        data = self._format(name=name, value=value, _type=_type)
-        self._data.append(data)
-        self._size += len(data)
-
-    def extend(self, buffer):
-        """
-        Adds another buffer to current buffer at the end of queue.
-        """
-        self._data.extend(buffer._data)
-        self._size += sum((len(entry) for entry in buffer._data))
-
-    def __len__(self):
-        return self.size
-
-    def __bool__(self):
-        return len(self) > 0
-
-    __nonzero__ = __bool__
-
-    def split_to_packets(self, prefix: Union[str, bytes] = '', packet_size_bytes: int = FAST_ETHERNET_MTU) -> List[bytes]:
+    def split_to_packets(self,
+                         prefix: Union[str, bytes] = '',
+                         packet_size_bytes: int = FAST_ETHERNET_MTU) -> List[bytes]:
         """
         :param prefix: statsd prefix. Example: 'service.rec.app.01'
         :param packet_size_bytes: maximum size of packet to avoid fragmentation
@@ -140,13 +124,34 @@ class StatsdBuffer:
 
         return packets
 
+    def _format(self, name: Union[str, bytes], value: Union[int, float], _type: Union[str, bytes]) -> bytes:
+        name = name if isinstance(name, bytes) else name.encode('utf8')
+        _type = _type if isinstance(_type, bytes) else _type.encode('utf8')
+        return b'%s:%d|%s\n' % (
+            name,
+            int(value) if self._force_int else value,
+            _type,
+        )
+
+    def _set_metric(self, name: Union[str, bytes], value: Union[int, float], _type: Union[str, bytes]):
+        data = self._format(name=name, value=value, _type=_type)
+        self._data.append(data)
+        self._size += len(data)
+
+    def __len__(self):
+        return self.size
+
+    def __bool__(self):
+        return len(self) > 0
+
+    __nonzero__ = __bool__
 
 
 STATSD_HOST = 'localhost'
 STATSD_PORT = 8125
 
 
-class StatsdClient:
+class MetricsSender:
     """
     Protocol description:
 
@@ -154,13 +159,21 @@ class StatsdClient:
     https://github.com/etsy/statsd/blob/master/docs/metric_types.md
     """
 
-    def __init__(self, host=STATSD_HOST, port=STATSD_PORT, prefix='', loop=None, logger=None, packet_size_bytes: int = FAST_ETHERNET_MTU):
+    def __init__(self,
+                 host=STATSD_HOST,
+                 port=STATSD_PORT,
+                 prefix='',
+                 loop=None,
+                 logger=None,
+                 packet_size_bytes: int = FAST_ETHERNET_MTU):
+
         self._prefix = prefix
         self._packet_size_bytes = packet_size_bytes
         self._loop = loop or asyncio.get_event_loop()
         self._addr = (host, port)
         self._udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._udp_sock.setblocking(False)
+
         if logger:
             self._logger = logger
         else:
@@ -171,11 +184,10 @@ class StatsdClient:
             logger.addHandler(ch)
             self._logger = logger
 
-
     def close(self):
         self._udp_sock.close()
 
-    async def send_buffer(self, buffer: StatsdBuffer) -> int:
+    async def send_buffer(self, buffer: MetricsBuffer) -> int:
         """
         Note: during send buffer you can always safely add new metrics to this buffer.
         :return: number of bytes sent
@@ -191,14 +203,14 @@ class StatsdClient:
             # Start sending packets, now anything new can be added to this buffer
             bytes_sent = 0
             for packet in packets_to_send:
-                bytes_sent += await sendto(self._loop, self._udp_sock, packet, self._addr)
+                bytes_sent += await _send_to(self._loop, self._udp_sock, packet, self._addr)
             return bytes_sent
         except:
             self._logger.exception('Cant send statsd data')
             return 0
 
 
-def sendto(loop, sock, data, addr, fut=None, registed=False):
+def _send_to(loop, sock, data, addr, fut=None, registed=False):
     """
     # https://www.pythonsheets.com/notes/python-asyncio.html
     :return: Future, resulting in number of bytes sent.
@@ -211,7 +223,7 @@ def sendto(loop, sock, data, addr, fut=None, registed=False):
     try:
         n = sock.sendto(data, addr)
     except (BlockingIOError, InterruptedError):
-        loop.add_writer(fd, sendto, loop, sock, data, addr, fut, True)
+        loop.add_writer(fd, _send_to, loop, sock, data, addr, fut, True)
     else:
         fut.set_result(n)
     return fut

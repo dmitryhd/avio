@@ -5,7 +5,6 @@ from contextlib import contextmanager
 from aiohttp import web
 
 import avio.log as log
-import avio.statsd as statsd
 
 
 class ApiHandler(web.View):
