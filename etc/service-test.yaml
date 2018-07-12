@@ -1,6 +1,6 @@
 logging:
   level: info
-  tag:
+  tag: 'avio'
   sentry_enabled: false
   sentry_dsn: ''
   sentry_concurrent: 2
