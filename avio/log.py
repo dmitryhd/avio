@@ -114,8 +114,8 @@ class JsonRecordFormatter(logging.Formatter):
                     message += '\n' + record.exc_text
                 self._add_dict(data, {'message': message})
         elif isinstance(record.msg, Exception):
-            s = self._get_trace(record)
-            self._add_dict(data, {'message': s})
+            trace = self._get_trace(record)
+            self._add_dict(data, {'message': trace})
         else:
             self._add_dict(data, {'message': record.msg})
 
@@ -138,8 +138,8 @@ class JsonRecordFormatter(logging.Formatter):
         return s
 
     @staticmethod
-    def _add_dict(data, dic):
-        for key, value in dic.items():
+    def _add_dict(data, update):
+        for key, value in update.items():
             if not isinstance(key, str):
                 key = str(key)
             if not isinstance(value, str):

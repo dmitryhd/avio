@@ -1,12 +1,4 @@
-from aiohttp import web
-
 import avio.default_middleware
-from avio import application
-
-
-def test_create_app():
-    app = application.make_app()
-    assert isinstance(app, web.Application)
 
 
 async def test_info(cli):
