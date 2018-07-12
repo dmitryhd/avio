@@ -1,0 +1,10 @@
+logging:
+  level: info
+debug: true
+metrics:
+    host: 'localhost'
+    port: 8125
+    prefix: 'apps.services.avio'
+    enabled: true
+ioloop_type: 'uvloop'
+shutdown_timeout_seconds: 2.0
