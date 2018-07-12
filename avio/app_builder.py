@@ -1,6 +1,7 @@
 import time
 
 from aiohttp import web
+import socket
 import asyncio
 import uvloop
 from copy import deepcopy
@@ -10,15 +11,16 @@ import avio.log as log
 import avio.default_middleware as default_middleware
 import avio.default_handlers as default_handlers
 from avio.config import ConfigParser
-
+from avio.metrics import _create_metrics_sender, _dispose_metrics_sender
 
 
 class AppBuilder:
 
-    def __init__(self):
+    def __init__(self, app_config: Optional[dict] = None):
         """
         Possible config options: str, dict, none
         """
+        self.app_config = app_config or {}
         self._base_config = self._get_config()
         self._logger = log.app_logger
         self.middlewares = [
@@ -45,21 +47,18 @@ class AppBuilder:
                 'host': 'localhost',
                 'port': 8125,
                 'prefix': 'apps.services.avio',
-                'enable': False,
+                'enabled': True,
             },
-            'io_loop_type': 'uvloop',
+            'ioloop_type': 'uvloop',
+            'shutdown_timeout_seconds': 2.0,
         }
-
-    @property
-    def app_config(self) -> dict:
-        return {}
 
     @staticmethod
     def _setup_default_routes(app: web.Application):
-        app.router.add_view('/_info', default_handlers.InfoHandler)
-        app.router.add_view('/_error', default_handlers.ErrorHandler)
-        app.router.add_view('/_echo', default_handlers.EchoHandler)
-        app.router.add_view('/_info_detailed', default_handlers.DetailedInfoHandler)
+        app.router.add_view('/_info', default_handlers.InfoHandler, name='info')
+        app.router.add_view('/_error', default_handlers.ErrorHandler, name='error')
+        app.router.add_view('/_echo', default_handlers.EchoHandler, name='echo')
+        app.router.add_view('/_info_detailed', default_handlers.DetailedInfoHandler, name='info_detailed')
 
     def prepare_app(self, app: web.Application, config: dict = None):
         """
@@ -73,14 +72,20 @@ class AppBuilder:
         self._logger = log.configure_app_logger(logger_config=config.get('logging'))
 
     def _setup_event_loop(self, config: dict):
-        if config.get('io_loop_type') == 'uvloop':
+        if config.get('ioloop_type') == 'uvloop':
             asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
             self._logger.info('Using uvloop')
         else:
             self._logger.info('Using default asyncio loop')
 
     def _update_config(self, new_config: dict = None) -> dict:
+        """:return: copy of local config, updated with new_config"""
         return ConfigParser.update(self._base_config, new_config)
+
+    @staticmethod
+    def _add_default_contexts(app: web.Application):
+        app.on_startup.append(_create_metrics_sender)
+        app.on_cleanup.append(_dispose_metrics_sender)
 
     def build_app(self, new_config: Optional[dict] = None) -> web.Application:
         """
@@ -97,6 +102,8 @@ class AppBuilder:
         app['start_ts'] = time.time()
 
         self._setup_default_routes(app)
+        self._add_default_contexts(app)
+
         self.prepare_app(app, config)
 
         return app
@@ -104,12 +111,17 @@ class AppBuilder:
     def run_app(self, app=None, new_config: Optional[dict] = None):
         if not app:
             app = self.build_app(new_config)
+        port = app['config'].get('port', 8890)
+        log.app_logger.warn(f'Service running at http://{socket.gethostname()}:{port}')
         web.run_app(
             app,
             host=app['config'].get('host', '0.0.0.0'),
-            port=app['config'].get('port', 8890),
+            port=port,
+            shutdown_timeout=app['config'].get('shutdown_timeout_seconds', 2.0),
+            print=False,
+            # TODO: separate access logger
+            access_log=log.app_logger,
         )
-
 
 # https://aiohttp.readthedocs.io/en/stable/web_quickstart.html#organizing-handlers-in-classes
 # https://stackoverflow.com/questions/32819231/

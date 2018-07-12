@@ -6,10 +6,18 @@ from avio.metrics import DummyMetricsSender
 
 
 @pytest.fixture
-def test_app() -> web.Application:
-    config = {}
-    app_builder = AppBuilder()
-    app = app_builder.build_app(config)
+def test_config():
+    return {
+        'metrics': {
+            'enabled': False
+        }
+    }
+
+
+@pytest.fixture
+def test_app(test_config) -> web.Application:
+    app_builder = AppBuilder(test_config)
+    app = app_builder.build_app()
     return app
 
 

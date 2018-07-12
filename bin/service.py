@@ -7,9 +7,9 @@ import sys
 def main():
     cur_dir = path.dirname(path.abspath(__file__))
     sys.path.append(path.join(cur_dir, '..'))
-    import avio.application
-    app = avio.application.make_app()
-    avio.application.run_app(app)
+    import avio.app_builder
+    builder = avio.app_builder.AppBuilder()
+    builder.run_app()
 
 
 if __name__ == '__main__':

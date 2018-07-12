@@ -31,7 +31,7 @@ def config_content():
 
 
 def test_read_yaml(config_file, config_content):
-    result_config = ConfigParser._read_config_part(config_file)
+    result_config = ConfigParser._read_config_file(config_file)
     assert config_content == result_config
 
 

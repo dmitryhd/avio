@@ -1,5 +1,6 @@
 import time
 import datetime
+import asyncio
 
 from avio.api_handler import ApiHandler
 
@@ -33,8 +34,10 @@ class DetailedInfoHandler(ApiHandler):
         age = datetime.datetime(1, 1, 1) + sec
 
         age_human = f'{age.day - 1} days {age.hour} hours {age.minute} minutes {age.second} seconds'
+        num_tasks = len(asyncio.Task.all_tasks())
         info = {
             'appRunning': age_human,
             'ageSeconds': age_seconds,
+            'concurrentCoroutines': num_tasks,
         }
         return self.finalize(info)

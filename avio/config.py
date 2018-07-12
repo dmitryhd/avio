@@ -15,19 +15,11 @@ class ConfigParser:
     def get_config(self) -> dict:
         return deepcopy(self._config)
 
-    @staticmethod
-    def _read_config_part(path: str) -> dict:
-        if not path:
-            return {}
-        with open(path, 'r', encoding='utf8') as fd:
-            return yaml.safe_load(fd)
-
     def read_config(self) -> dict:
         """
-        updates local config.
-        :return:
+        Updates local config with yaml.
         """
-        config_part = self._read_config_part(self._config_path())
+        config_part = self._read_config_file(self._config_path())
         self.update_config(config_part)
         return self.get_config()
 
@@ -45,6 +37,14 @@ class ConfigParser:
         c.update(new_config)
         return c
 
+    @staticmethod
+    def _read_config_file(path: str) -> dict:
+        if not path:
+            return {}
+        with open(path, 'r', encoding='utf8') as fd:
+            cfg = yaml.safe_load(fd)
+        return cfg or {}
+
+
     def _config_path(self) -> str:
         return os.getenv('CONFIG_PATH', '')
-

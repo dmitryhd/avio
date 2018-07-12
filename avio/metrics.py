@@ -12,6 +12,9 @@ https://gist.github.com/baverman/fc0eee788ca204d8e34ee6ff3d0be2e5
 not async
 https://github.com/qntln/fastatsd
 """
+from aiohttp import web
+
+from avio import log as log
 
 __all__ = (
     'MetricsBuffer',
@@ -257,3 +260,24 @@ class DummyMetricsSender(MetricsSender):
         future.set_result(0)
         self.metrics.append(data)
         return future
+
+
+async def _create_metrics_sender(app: web.Application):
+    metrics_config = app['config'].get('metrics', {})
+    if metrics_config.get('enabled'):
+        host = metrics_config.get('host', '127.0.0.1')
+        port = metrics_config.get('port', 8125)
+        log.app_logger.warn(f'Created metrics sender (statsd) {host}:{port}')
+
+        app['metrics_sender'] = MetricsSender(
+            host=host,
+            port=port,
+            prefix=metrics_config['prefix'],
+            loop=app.loop,
+            logger=log.app_logger,
+        )
+
+
+async def _dispose_metrics_sender(app: web.Application):
+    if 'metrics_sender' in app:
+        app['metrics_sender'].close()

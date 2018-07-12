@@ -35,12 +35,14 @@ async def format_exceptions(request, handler):
         return await handler(request)
 
     # Jsonify any http exception on wrong url
-    except web.HTTPException as ex:
+    except web.HTTPError as ex:
+        log.app_logger.exception('')
         status = ex.status
         traceback_str = traceback.format_exc()
         message = ex.reason
 
     except Exception:
+        log.app_logger.exception('')
         status = 500
         traceback_str = traceback.format_exc()
         message = UNHANDLED_ERROR_MESSAGE
@@ -50,7 +52,6 @@ async def format_exceptions(request, handler):
         'message': message,
         'traceback': traceback_str,  # TODO: make traceback optional
     }
-    log.app_logger.info(traceback_str)
     return web.json_response(response, status=status)
 
 
@@ -73,13 +74,15 @@ async def measure_time_and_send_metrics(request, handler):
         elapsed = end - start
         request.timers['response'] = elapsed
 
-        for timer_name, seconds in request.timers.items():
-            request.metrics_buffer.timing(timer_name, seconds * 1000)  # NOTE: conversion to ms.
+        if 'metrics_sender' in request.app:
 
-        # TODO: here might go fire and forget coroutines, like sending stats and exceptions
-        # https://stackoverflow.com/questions/37278647/fire-and-forget-python-async-await
-        await request.app['metrics_sender'].send_buffer(request.metrics_buffer)
+            for timer_name, seconds in request.timers.items():
+                request.metrics_buffer.timing(timer_name, seconds * 1000)  # NOTE: conversion to ms.
+
+            # Fire and forget metric
+            asyncio.ensure_future(request.app['metrics_sender'].send_buffer(request.metrics_buffer))
 
         # TODO: remove later
         num_tasks = len(asyncio.Task.all_tasks())
         log.app_logger.info(f'response took {request.timers["response"]:.3f} s, {num_tasks:,} running')
+
