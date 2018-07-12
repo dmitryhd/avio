@@ -11,7 +11,8 @@ import avio.log as log
 import avio.default_middleware as default_middleware
 import avio.default_handlers as default_handlers
 from avio.config import ConfigParser
-from avio.metrics import _create_metrics_sender, _dispose_metrics_sender
+from avio.metrics import create_metrics_sender, dispose_metrics_sender
+from avio.sentry import configure_sentry, dispose_sentry
 
 
 class AppBuilder:
@@ -37,6 +38,16 @@ class AppBuilder:
     def default_config(self) -> dict:
         return {
             'logging': {
+                'level': 'WARN',
+                'tag': '',
+                'sentry_enabled': False,
+                'sentry_dsn': '',
+                'sentry_concurrent': 2,
+                'sentry_enable_breadcrumbs': False,
+                'sentry_level': 'WARN',
+                'sentry_transport': 'queued',
+                'sentry_transport_workers': 2,
+                'sentry_transport_queue_size': 500,
             },
             'image_tag': 'dev',  # Unique id
             'enable_jsonchema': False,
@@ -84,8 +95,11 @@ class AppBuilder:
 
     @staticmethod
     def _add_default_contexts(app: web.Application):
-        app.on_startup.append(_create_metrics_sender)
-        app.on_cleanup.append(_dispose_metrics_sender)
+        app.on_startup.append(create_metrics_sender)
+        app.on_cleanup.append(dispose_metrics_sender)
+
+        app.on_startup.append(configure_sentry)
+        app.on_cleanup.append(dispose_sentry)
 
     def build_app(self, new_config: Optional[dict] = None) -> web.Application:
         """

@@ -3,7 +3,6 @@ import logging
 import socket
 import json
 
-
 APP_LOGGER_NAME = 'avio'
 DEFAULT_LOGGER_LEVEL = 'INFO'
 
@@ -20,39 +19,15 @@ def configure_app_logger(logger_config: dict = None) -> logging.Logger:
     :return: configured logger
     """
 
-    def _level_by_name(level_name: str) -> int:
-        """
-        :param level_name:
-        :return:
-        >>> _level_by_name('DEBUG')
-        10
-        >>> _level_by_name('info')
-        20
-        >>> _level_by_name('i')
-        20
-        """
-
-        if len(level_name) == 1:
-            level_map = {
-                'd': 'debug',
-                'i': 'info',
-                'w': 'warning',
-                'e': 'error',
-                'c': 'critical',
-            }
-            level_name = level_map.get(level_name.lower(), DEFAULT_LOGGER_LEVEL)
-
-        level_name = level_name.upper()
-        return getattr(logging, level_name)
-
     logger_config = logger_config or {}
     logger_config.setdefault('use_json_formatter', True)
     logger_config.setdefault('tag', 'avio')
     logger_config.setdefault('level', 'warning')
+    logger_config.setdefault('use_sentry', False)
 
     logger = logging.getLogger(logger_config.get('name', APP_LOGGER_NAME))
     logger.handlers = []
-    level = _level_by_name(logger_config['level'])
+    level = get_log_level_by_name(logger_config['level'])
     logger.setLevel(level)
 
     if logger_config['use_json_formatter']:
@@ -181,3 +156,29 @@ class JsonToStdErrHandler(logging.Handler):
     def close(self):
         self.acquire()
         self.release()
+
+
+def get_log_level_by_name(level_name: str) -> int:
+    """
+    :param level_name:
+    :return:
+    >>> get_log_level_by_name('DEBUG')
+    10
+    >>> get_log_level_by_name('info')
+    20
+    >>> get_log_level_by_name('i')
+    20
+    """
+
+    if len(level_name) == 1:
+        level_map = {
+            'd': 'debug',
+            'i': 'info',
+            'w': 'warning',
+            'e': 'error',
+            'c': 'critical',
+        }
+        level_name = level_map.get(level_name.lower(), DEFAULT_LOGGER_LEVEL)
+
+    level_name = level_name.upper()
+    return getattr(logging, level_name)

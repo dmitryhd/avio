@@ -16,8 +16,8 @@ def test_config():
 
 @pytest.fixture
 def test_app(test_config) -> web.Application:
-    app_builder = AppBuilder(test_config)
-    app = app_builder.build_app()
+    app_builder = AppBuilder()
+    app = app_builder.build_app(test_config)
     return app
 
 

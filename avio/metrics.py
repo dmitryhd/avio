@@ -262,7 +262,7 @@ class DummyMetricsSender(MetricsSender):
         return future
 
 
-async def _create_metrics_sender(app: web.Application):
+async def create_metrics_sender(app: web.Application):
     metrics_config = app['config'].get('metrics', {})
     if metrics_config.get('enabled'):
         host = metrics_config.get('host', '127.0.0.1')
@@ -278,6 +278,6 @@ async def _create_metrics_sender(app: web.Application):
         )
 
 
-async def _dispose_metrics_sender(app: web.Application):
+async def dispose_metrics_sender(app: web.Application):
     if 'metrics_sender' in app:
         app['metrics_sender'].close()
