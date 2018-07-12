@@ -24,10 +24,10 @@ _Work in progress_
 - [x] check locustio
 ## v0.4
 - [x] statsd
-- [ ] json logger
+- [x] json logger
 - [ ] raven
 - [ ] handler time metrics by error codes
-- [ ] default values at config
+- [x] default values at config
 ## v0.5
 - [ ] run benchmark at macos
 - [ ] pyflame profile
@@ -42,8 +42,7 @@ _Work in progress_
 - [ ] mongodb adapter
 - [ ] sphinx adapter
 ## v0.7
-- [ ] Modularized application builder
-- [ ] 
+- [x] Modularized application builder
 
 ## opt
 - [x] benchmark

@@ -267,7 +267,7 @@ async def _create_metrics_sender(app: web.Application):
     if metrics_config.get('enabled'):
         host = metrics_config.get('host', '127.0.0.1')
         port = metrics_config.get('port', 8125)
-        log.app_logger.warn(f'Created metrics sender (statsd) {host}:{port}')
+        log.app_logger.info(f'Created metrics sender (statsd) {host}:{port}')
 
         app['metrics_sender'] = MetricsSender(
             host=host,

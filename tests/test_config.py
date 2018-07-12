@@ -65,6 +65,33 @@ def default_config():
         }
     }
 
+
 def test_config_parser():
     conf_parser = ConfigParser(default_config())
     assert default_config() == conf_parser.get_config()
+
+
+def test_update_2nd_level_dicts():
+    conf_parser = ConfigParser()
+    first_config = {
+        'inner_dict': {
+            '1': 1,
+            '2': 2,
+        },
+        'key': 'val',
+    }
+    second_config = {
+        'inner_dict': {
+            '1': 100,
+            '3': 3,
+        },
+    }
+    expected_config = {
+        'inner_dict': {
+            '1': 100,  # Updated
+            '2': 2,
+            '3': 3,  # New value
+        },
+        'key': 'val',
+    }
+    assert expected_config == conf_parser.update(first_config, second_config)

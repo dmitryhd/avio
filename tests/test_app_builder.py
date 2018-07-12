@@ -4,7 +4,6 @@ from avio.app_builder import AppBuilder
 from avio.default_handlers import InfoHandler
 
 
-
 def test_create_app():
     app = AppBuilder().build_app()
     assert isinstance(app, web.Application)
@@ -37,5 +36,5 @@ def test_additional_routes():
             app.router.add_view('/_info2', InfoHandler, name='info2')
 
     builder = MyAppBuilder()
-    app = builder.build_app()
-    assert 'info2' in app.router.named_resources()
+    app_ = builder.build_app()
+    assert 'info2' in app_.router.named_resources()

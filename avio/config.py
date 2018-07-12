@@ -27,15 +27,20 @@ class ConfigParser:
         """
         Updates local config with new config
         """
-        self._config.update(new_config)
+        self._config = self.update(self._config, new_config)
 
     @staticmethod
     def update(old_config, new_config) -> dict:
         if not new_config:
             new_config = {}
-        c = deepcopy(old_config)
-        c.update(new_config)
-        return c
+        config = deepcopy(old_config)
+        # Much like config.update(new_config), but update 2nd level dicts, instead of replacing
+        for key, value in new_config.items():
+            if isinstance(value, dict) and key in config and isinstance(config[key], dict):
+                config[key].update(value)
+            else:
+                config[key] = value
+        return config
 
     @staticmethod
     def _read_config_file(path: str) -> dict:
@@ -44,7 +49,6 @@ class ConfigParser:
         with open(path, 'r', encoding='utf8') as fd:
             cfg = yaml.safe_load(fd)
         return cfg or {}
-
 
     def _config_path(self) -> str:
         return os.getenv('CONFIG_PATH', '')

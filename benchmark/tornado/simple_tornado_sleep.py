@@ -5,6 +5,7 @@ import tornado.gen
 import json
 import time
 
+
 class MainHandler(tornado.web.RequestHandler):
 
     async def get(self):
@@ -14,10 +15,12 @@ class MainHandler(tornado.web.RequestHandler):
         print(e - b)
         self.write(json.dumps({}))
 
+
 def make_app():
     return tornado.web.Application([
         (r"/sleep50", MainHandler),
     ])
+
 
 if __name__ == "__main__":
     app = make_app()
