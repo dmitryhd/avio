@@ -5,3 +5,4 @@ autopep8
 seaborn
 locustio==0.8.1
 tqdm
+bumpversion==0.5.3

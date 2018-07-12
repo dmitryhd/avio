@@ -50,3 +50,6 @@ jupyter:
 
 pep8:
 	$(PEP8) $(SOURCE_DIR) $(TESTS_DIR) $(BIN_DIR)
+
+bump:
+	@bumpversion --tag patch
