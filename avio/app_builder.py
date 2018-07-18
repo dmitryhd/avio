@@ -16,6 +16,12 @@ from avio.sentry import configure_sentry, dispose_sentry
 
 
 class AppBuilder:
+    """
+    Usage:
+    >>> builder = AppBuilder({'connections': 100})
+    >>> app = builder.build_app({'custom_setting': 1})
+    >>> builder.run_app(app)
+    """
 
     def __init__(self, app_config: Optional[dict] = None):
         """
@@ -28,6 +34,43 @@ class AppBuilder:
             default_middleware.format_exceptions,
             default_middleware.measure_time_and_send_metrics,
         ]
+
+    def build_app(self, new_config: Optional[dict] = None) -> web.Application:
+        """
+        Creates application.
+        If config dict not specified, yaml file in env CONFIG_PAT will be readed, else empty config passed
+        """
+        config = self._update_config(new_config)
+
+        self._setup_logger(config)
+        self._setup_event_loop(config)
+
+        app = web.Application(middlewares=self.middlewares)
+        app['config'] = deepcopy(config)
+        app['start_ts'] = time.time()
+
+        self._setup_default_routes(app)
+        self._add_default_contexts(app)
+
+        self.prepare_app(app, config)
+
+        return app
+
+    def run_app(self, app=None, new_config: Optional[dict] = None):
+        if not app:
+            app = self.build_app(new_config)
+        port = app['config'].get('port', 8890)
+        log.app_logger.warn(f'Service running at http://{socket.gethostname()}:{port}')
+        web.run_app(
+            app,
+            host=app['config'].get('host', '0.0.0.0'),
+            port=port,
+            shutdown_timeout=app['config'].get('shutdown_timeout_seconds', 2.0),
+            print=False,
+            # TODO: separate access logger
+            access_log=log.app_logger,
+        )
+
 
     def _get_config(self) -> dict:
         config_parser = ConfigParser(self.default_config)
@@ -100,42 +143,6 @@ class AppBuilder:
 
         app.on_startup.append(configure_sentry)
         app.on_cleanup.append(dispose_sentry)
-
-    def build_app(self, new_config: Optional[dict] = None) -> web.Application:
-        """
-        Creates application.
-        If config dict not specified, yaml file in env CONFIG_PAT will be readed, else empty config passed
-        """
-        config = self._update_config(new_config)
-
-        self._setup_logger(config)
-        self._setup_event_loop(config)
-
-        app = web.Application(middlewares=self.middlewares)
-        app['config'] = deepcopy(config)
-        app['start_ts'] = time.time()
-
-        self._setup_default_routes(app)
-        self._add_default_contexts(app)
-
-        self.prepare_app(app, config)
-
-        return app
-
-    def run_app(self, app=None, new_config: Optional[dict] = None):
-        if not app:
-            app = self.build_app(new_config)
-        port = app['config'].get('port', 8890)
-        log.app_logger.warn(f'Service running at http://{socket.gethostname()}:{port}')
-        web.run_app(
-            app,
-            host=app['config'].get('host', '0.0.0.0'),
-            port=port,
-            shutdown_timeout=app['config'].get('shutdown_timeout_seconds', 2.0),
-            print=False,
-            # TODO: separate access logger
-            access_log=log.app_logger,
-        )
 
 # https://aiohttp.readthedocs.io/en/stable/web_quickstart.html#organizing-handlers-in-classes
 # https://stackoverflow.com/questions/32819231/
