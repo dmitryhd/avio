@@ -43,6 +43,19 @@ class HardWorkHandler(tornado.web.RequestHandler):
             pass
 
 
+class HardWorkHandlerOldStyle(tornado.web.RequestHandler):
+    timeout_time = datetime.timedelta(seconds=SLEEP_TIME / 2)
+
+    @tornado.gen.coroutine
+    def get(self):
+        yield work()
+        yield tornado.gen.multi([work(), work()])
+        try:
+            yield tornado.gen.with_timeout(self.timeout_time, work())
+        except tornado.util.TimeoutError:
+            pass
+
+
 def make_app(uvloop=False):
     if uvloop:
         IOLoop.configure('tornado.platform.asyncio.AsyncIOLoop')
@@ -53,6 +66,7 @@ def make_app(uvloop=False):
         (r'/sleep50', SimpleHandler),
         (r'/oldstyle50', OldStyleHandler),
         (r'/hard_work', HardWorkHandler),
+        (r'/hard_work_oldstyle', HardWorkHandlerOldStyle),
     ])
 
 
