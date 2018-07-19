@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import tornado.ioloop
 import tornado.web
 import tornado.gen
@@ -8,10 +9,6 @@ import sys
 import datetime
 
 SLEEP_TIME = 0.05
-
-
-async def work():
-    await tornado.gen.sleep(SLEEP_TIME)
 
 
 @tornado.gen.coroutine
@@ -30,6 +27,10 @@ class OldStyleHandler(tornado.web.RequestHandler):
     def get(self):
         yield old_work()
         self.write('')
+
+
+async def work():
+    await tornado.gen.sleep(SLEEP_TIME)
 
 
 class HardWorkHandler(tornado.web.RequestHandler):
@@ -76,5 +77,6 @@ if __name__ == "__main__":
     else:
         app = make_app(uvloop=False)
 
+    print(f'pid = {os.getppid()}')
     app.listen(8890)
     tornado.ioloop.IOLoop.current().start()

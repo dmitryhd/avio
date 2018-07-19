@@ -4,6 +4,7 @@ import asyncio
 import async_timeout
 from aiohttp import web
 import sys
+import os
 
 SLEEP_TIME = 0.05
 
@@ -40,5 +41,7 @@ if __name__ == "__main__":
         import uvloop
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
         print('using uvloop')
+
+    print(f'pid = {os.getppid()}')
 
     web.run_app(get_app(), port=8890)
