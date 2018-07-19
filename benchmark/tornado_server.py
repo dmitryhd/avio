@@ -2,14 +2,45 @@
 import tornado.ioloop
 import tornado.web
 import tornado.gen
+import tornado.util
 from tornado.ioloop import IOLoop
+import sys
+import datetime
+
+SLEEP_TIME = 0.05
 
 
-class MainHandler(tornado.web.RequestHandler):
+async def work():
+    await tornado.gen.sleep(SLEEP_TIME)
 
+
+@tornado.gen.coroutine
+def old_work():
+    yield tornado.gen.sleep(SLEEP_TIME)
+
+
+class SimpleHandler(tornado.web.RequestHandler):
     async def get(self):
-        await tornado.gen.sleep(0.05)
+        await work()
         self.write('')
+
+
+class OldStyleHandler(tornado.web.RequestHandler):
+    @tornado.gen.coroutine
+    def get(self):
+        yield old_work()
+        self.write('')
+
+
+class HardWorkHandler(tornado.web.RequestHandler):
+    timeout_time = datetime.timedelta(seconds=SLEEP_TIME / 2)
+    async def get(self):
+        await work()
+        await tornado.gen.multi([work(), work()])
+        try:
+            await tornado.gen.with_timeout(self.timeout_time, work())
+        except tornado.util.TimeoutError:
+            pass
 
 
 def make_app(uvloop=False):
@@ -18,11 +49,18 @@ def make_app(uvloop=False):
         import asyncio
         import uvloop
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-    return tornado.web.Application([(r'/sleep50', MainHandler)])
-
+    return tornado.web.Application([
+        (r'/sleep50', SimpleHandler),
+        (r'/oldstyle50', OldStyleHandler),
+        (r'/hard_work', HardWorkHandler),
+    ])
 
 
 if __name__ == "__main__":
-    app = make_app(uvloop=True)
+    if len(sys.argv) > 1:
+        app = make_app(uvloop=True)
+    else:
+        app = make_app(uvloop=False)
+
     app.listen(8890)
     tornado.ioloop.IOLoop.current().start()

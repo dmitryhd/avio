@@ -13,7 +13,6 @@ async def sleep50(_):
 def init():
     app = web.Application()
     app.router.add_get('/sleep50', sleep50)
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     return app
 
 

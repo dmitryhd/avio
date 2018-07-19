@@ -1,18 +1,44 @@
 #!/usr/bin/env python3
 
 import asyncio
+import async_timeout
 from aiohttp import web
+import sys
+
+SLEEP_TIME = 0.05
+
+
+async def work():
+    await asyncio.sleep(SLEEP_TIME)
 
 
 async def sleep50(_):
-    await asyncio.sleep(0.05)
+    await work()
     return web.Response(text="")
 
 
-def init():
+async def hard_work(_):
+    await work()
+    await asyncio.gather(work(), work())
+    try:
+        async with async_timeout.timeout(SLEEP_TIME / 2):
+            await work()
+    except asyncio.TimeoutError:
+        pass
+    return web.Response(text="")
+
+
+def get_app():
     app = web.Application()
     app.router.add_get('/sleep50', sleep50)
+    app.router.add_get('/hard_work', hard_work)
     return app
 
 
-web.run_app(init(), port=8890)
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        import uvloop
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        print('using uvloop')
+
+    web.run_app(get_app(), port=8890)
