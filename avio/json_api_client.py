@@ -5,6 +5,8 @@ import aiohttp
 import async_timeout
 from yarl import URL
 
+from avio.client import Client
+
 
 TIMEOUT_CODE = 599
 
@@ -36,7 +38,7 @@ class ApiResponse:
     seconds_run = attr.ib(default=0)
 
 
-class JsonApiClient:
+class JsonApiClient(Client):
     """
     Client for json api.
     Http transport is used.
@@ -44,6 +46,7 @@ class JsonApiClient:
     All responses are json.
     return values are ApiResponse objects (have status and json fields)
     """
+    NAME = 'item_client'
 
     def __init__(self,
                  url: str,

@@ -64,6 +64,7 @@ class AppBuilder:
             default_middleware.format_exceptions,
             default_middleware.measure_time_and_send_metrics,
         ]
+        self.client_classes = []
 
     def build_app(self, new_config: Optional[dict] = None) -> web.Application:
         """

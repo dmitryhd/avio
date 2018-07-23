@@ -6,6 +6,24 @@ from avio import ApiHandler
 from avio import JsonApiClient
 
 
+class ItemClient:
+    NAME = 'item_client'
+
+    @classmethod
+    def from_app(cls, app: web.Application):
+        return JsonApiClient(**app['config'][cls.NAME])
+
+    async def open(self, app: web.Application):
+        app_logger.debug(f'{self.NAME} created')
+        app[self.NAME] = JsonApiClient(**app['config'][self.NAME])
+
+    async def close(self, app: web.Application):
+        if 'item_client' in app:
+            app_logger.debug(f'{self.NAME} deleted')
+            await app[self.NAME].close()
+            del app[self.NAME]
+
+
 # TODO: make client as part of applicatoin???
 async def create_cli(app: web.Application):
     app_logger.debug('client created')
@@ -30,6 +48,10 @@ class ItemHandler(ApiHandler):
         return self.finalize({
             'item': res.json
         })
+
+
+class ClientAppBuilder(AppBuilder):
+    pass
 
 
 class ExampleAppBuilder(AppBuilder):
