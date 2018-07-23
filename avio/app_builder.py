@@ -18,14 +18,45 @@ from avio.sentry import configure_sentry, dispose_sentry
 class AppBuilder:
     """
     Usage:
+    customization: just inherit me and overwrite self.prepare_app
     >>> builder = AppBuilder({'connections': 100})
     >>> app = builder.build_app({'custom_setting': 1})
     """
+    additional_config = {
+    }
+
+    _default_config = {
+        'logging': {
+            'level': 'WARN',
+            'tag': 'tag_not_set',
+            'sentry_enabled': False,
+            'sentry_dsn': '',
+            'sentry_concurrent': 2,
+            'sentry_enable_breadcrumbs': False,
+            'sentry_level': 'WARN',
+            'sentry_transport': 'queued',
+            'sentry_transport_workers': 2,
+            'sentry_transport_queue_size': 500,
+        },
+        'image_tag': 'dev',  # Unique id
+        'debug': False,
+        'host': '0.0.0.0',
+        'port': 8890,
+        'metrics': {
+            'host': 'localhost',
+            'port': 8125,
+            'prefix': 'apps.services.avio',
+            'enabled': True,
+        },
+        'ioloop_type': 'uvloop',
+        'shutdown_timeout_seconds': 2.0,
+    }
 
     def __init__(self, app_config: Optional[dict] = None):
         #TODO: mb refactor config updates?
         config_parser = cfg.ConfigParser(self._default_config)
         self._base_config = config_parser.read_config()
+        self._base_config = cfg.update(self._base_config, self.additional_config)
         self._base_config = cfg.update(self._base_config, app_config)
 
         self._logger = log.app_logger
@@ -54,36 +85,6 @@ class AppBuilder:
         self.prepare_app(app, config)
 
         return app
-
-    @property
-    def _default_config(self) -> dict:
-        return {
-            'logging': {
-                'level': 'WARN',
-                'tag': '',
-                'sentry_enabled': False,
-                'sentry_dsn': '',
-                'sentry_concurrent': 2,
-                'sentry_enable_breadcrumbs': False,
-                'sentry_level': 'WARN',
-                'sentry_transport': 'queued',
-                'sentry_transport_workers': 2,
-                'sentry_transport_queue_size': 500,
-            },
-            'image_tag': 'dev',  # Unique id
-            'enable_jsonchema': False,
-            'debug': False,
-            'host': '0.0.0.0',
-            'port': 8890,
-            'metrics': {
-                'host': 'localhost',
-                'port': 8125,
-                'prefix': 'apps.services.avio',
-                'enabled': True,
-            },
-            'ioloop_type': 'uvloop',
-            'shutdown_timeout_seconds': 2.0,
-        }
 
     @staticmethod
     def _setup_default_routes(app: web.Application):

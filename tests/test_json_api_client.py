@@ -39,6 +39,6 @@ async def test_404(test_api_client):
 async def test_post(test_api_client):
     post_body = {'some_key': 'some_val даже с utf8'}
 
-    response = await test_api_client.post('/_echo', json=post_body)
+    response = await test_api_client.post(path='/_echo', json=post_body)
     assert 200 == response.status
     assert post_body == response.json

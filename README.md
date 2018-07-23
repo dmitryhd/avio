@@ -25,14 +25,16 @@ _Work in progress_
 ## v0.4
 - [x] statsd
 - [x] json logger
-- [ ] raven
+- [x] raven
 - [ ] handler time metrics by error codes
 - [x] default values at config
 ## v0.5
-- [ ] run benchmark at macos
-- [ ] pyflame profile
+- [x] run benchmark at macos
+- [x] pyflame profile
 - [ ] smart stub (delay, errors, json responses, bursts)
-- [ ] performance benchmark vs tornado
+- [x] performance benchmark vs tornado
+- [ ] example
+- [ ] register clients
 - [ ] periodic task to update (https://aiohttp.readthedocs.io/en/stable/web_advanced.html#background-tasks1)
 - [ ] redis client
 - [ ] readiness/liveliness probe

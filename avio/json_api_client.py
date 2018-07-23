@@ -1,9 +1,3 @@
-"""
-how to trace clients
-# https://docs.aiohttp.org/en/stable/client_advanced.html#client-tracing
-
-"""
-
 import time
 
 import attr
@@ -52,10 +46,10 @@ class JsonApiClient:
     """
 
     def __init__(self,
-                 base_url: str,
+                 url: str,
                  session: aiohttp.ClientSession = None,
                  timeout_seconds: float = None):
-        self._base_url = URL(base_url)
+        self._base_url = URL(url)
         self._session = session or get_session()
         self._timeout_seconds = timeout_seconds
 
@@ -71,21 +65,26 @@ class JsonApiClient:
         response.seconds_run = time.time() - btime
         return response
 
-    async def get(self, path: str) -> ApiResponse:
+    async def get(self, path: str = '') -> ApiResponse:
         url = self._path_to(path)
         future = self._session.get(url)
         return await self._fetch(future)
 
-    async def post(self, path: str, json: dict) -> ApiResponse:
+    async def post(self, json: dict, path: str = '') -> ApiResponse:
         url = self._path_to(path)
         future = self._session.post(url, json=json)
         return await self._fetch(future)
+
+    async def close(self):
+        await self._session.close()
 
     @property
     def loop(self):
         return self._session._loop
 
     def _path_to(self, path: str) -> str:
+        if not path:
+            return self._base_url
         return self._base_url.join(URL(path)).human_repr()
 
     def __repr__(self) -> str:

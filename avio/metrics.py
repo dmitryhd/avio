@@ -203,7 +203,10 @@ class MetricsSender:
         try:
 
             # Strip information to be sent from this buffer
-            packets_to_send = buffer.split_to_packets(self._prefix, packet_size_bytes=self._packet_size_bytes)
+            packets_to_send = buffer.split_to_packets(
+                self._prefix,
+                packet_size_bytes=self._packet_size_bytes,
+            )
             if not len(packets_to_send):
                 return 0
             buffer.clear()
@@ -211,7 +214,12 @@ class MetricsSender:
             # Start sending packets, now anything new can be added to this buffer
             bytes_sent = 0
             for packet in packets_to_send:
-                bytes_sent += await self._send_to(self._loop, self._udp_sock, packet, self._addr)
+                bytes_sent += await self._send_to(
+                    self._loop,
+                    self._udp_sock,
+                    packet,
+                    self._addr,
+                )
             return bytes_sent
         except:  # noqa
             self._logger.exception('Cant send statsd data')
@@ -238,6 +246,7 @@ class MetricsSender:
     def _create_socket(self):
         self._udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._udp_sock.setblocking(False)
+        self._udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 
 class DummyMetricsSender(MetricsSender):
@@ -267,7 +276,7 @@ async def create_metrics_sender(app: web.Application):
     if metrics_config.get('enabled'):
         host = metrics_config.get('host', '127.0.0.1')
         port = metrics_config.get('port', 8125)
-        log.app_logger.info(f'Created metrics sender (statsd) {host}:{port}')
+        log.app_logger.debug(f'Create metrics sender (statsd) {host}:{port}')
 
         app['metrics_sender'] = MetricsSender(
             host=host,
@@ -280,4 +289,5 @@ async def create_metrics_sender(app: web.Application):
 
 async def dispose_metrics_sender(app: web.Application):
     if 'metrics_sender' in app:
+        log.app_logger.debug(f'Dispose metrics sender (statsd)')
         app['metrics_sender'].close()
