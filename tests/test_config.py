@@ -3,7 +3,7 @@ import contextlib
 
 import pytest
 
-from avio.config import ConfigParser
+from avio.config import ConfigParser, update
 
 
 @pytest.fixture()
@@ -94,4 +94,4 @@ def test_update_2nd_level_dicts():
         },
         'key': 'val',
     }
-    assert expected_config == conf_parser.update(first_config, second_config)
+    assert expected_config == update(first_config, second_config)

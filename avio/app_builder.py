@@ -10,7 +10,7 @@ from typing import Optional
 import avio.log as log
 import avio.default_middleware as default_middleware
 import avio.default_handlers as default_handlers
-from avio.config import ConfigParser
+import avio.config as cfg
 from avio.metrics import create_metrics_sender, dispose_metrics_sender
 from avio.sentry import configure_sentry, dispose_sentry
 
@@ -27,8 +27,10 @@ class AppBuilder:
         """
         Possible config options: str, dict, none
         """
-        self.app_config = app_config or {}
-        self._base_config = self._get_config()
+        config_parser = cfg.ConfigParser(self._default_config)
+        self._base_config = config_parser.read_config()
+        self._base_config = cfg.update(self._base_config, app_config)
+
         self._logger = log.app_logger
         self.middlewares = [
             default_middleware.format_exceptions,
@@ -40,7 +42,7 @@ class AppBuilder:
         Creates application.
         If config dict not specified, yaml file in env CONFIG_PAT will be readed, else empty config passed
         """
-        config = self._update_config(new_config)
+        config = cfg.update(self._base_config, new_config)
 
         self._setup_logger(config)
         self._setup_event_loop(config)
@@ -72,13 +74,8 @@ class AppBuilder:
         )
 
 
-    def _get_config(self) -> dict:
-        config_parser = ConfigParser(self.default_config)
-        config_parser.update_config(self.app_config)
-        return config_parser.read_config()
-
     @property
-    def default_config(self) -> dict:
+    def _default_config(self) -> dict:
         return {
             'logging': {
                 'level': 'WARN',
@@ -134,7 +131,7 @@ class AppBuilder:
 
     def _update_config(self, new_config: dict = None) -> dict:
         """:return: copy of local config, updated with new_config"""
-        return ConfigParser.update(self._base_config, new_config)
+        return
 
     @staticmethod
     def _add_default_contexts(app: web.Application):
@@ -143,9 +140,3 @@ class AppBuilder:
 
         app.on_startup.append(configure_sentry)
         app.on_cleanup.append(dispose_sentry)
-
-# https://aiohttp.readthedocs.io/en/stable/web_quickstart.html#organizing-handlers-in-classes
-# https://stackoverflow.com/questions/32819231/
-# class-based-views-in-aiohttp?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qahello
-# The code doesn't recreate BaseView for every request
-# https://aiohttp.readthedocs.io/en/stable/web_advanced.html#middlewares

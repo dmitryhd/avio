@@ -3,6 +3,19 @@ import yaml
 from copy import deepcopy
 
 
+def update(old_config, new_config) -> dict:
+    if not new_config:
+        new_config = {}
+    config = deepcopy(old_config)
+    # Much like config.update(new_config), but update 2nd level dicts, instead of replacing
+    for key, value in new_config.items():
+        if isinstance(value, dict) and key in config and isinstance(config[key], dict):
+            config[key].update(value)
+        else:
+            config[key] = value
+    return config
+
+
 class ConfigParser:
 
     def __init__(self, initial_config: dict = None):
@@ -27,20 +40,7 @@ class ConfigParser:
         """
         Updates local config with new config
         """
-        self._config = self.update(self._config, new_config)
-
-    @staticmethod
-    def update(old_config, new_config) -> dict:
-        if not new_config:
-            new_config = {}
-        config = deepcopy(old_config)
-        # Much like config.update(new_config), but update 2nd level dicts, instead of replacing
-        for key, value in new_config.items():
-            if isinstance(value, dict) and key in config and isinstance(config[key], dict):
-                config[key].update(value)
-            else:
-                config[key] = value
-        return config
+        self._config = update(self._config, new_config)
 
     @staticmethod
     def _read_config_file(path: str) -> dict:
