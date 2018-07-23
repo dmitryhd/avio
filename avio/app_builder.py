@@ -20,13 +20,10 @@ class AppBuilder:
     Usage:
     >>> builder = AppBuilder({'connections': 100})
     >>> app = builder.build_app({'custom_setting': 1})
-    >>> builder.run_app(app)
     """
 
     def __init__(self, app_config: Optional[dict] = None):
-        """
-        Possible config options: str, dict, none
-        """
+        #TODO: mb refactor config updates?
         config_parser = cfg.ConfigParser(self._default_config)
         self._base_config = config_parser.read_config()
         self._base_config = cfg.update(self._base_config, app_config)
@@ -57,22 +54,6 @@ class AppBuilder:
         self.prepare_app(app, config)
 
         return app
-
-    def run_app(self, app=None, new_config: Optional[dict] = None):
-        if not app:
-            app = self.build_app(new_config)
-        port = app['config'].get('port', 8890)
-        log.app_logger.warn(f'Service running at http://{socket.gethostname()}:{port}')
-        web.run_app(
-            app,
-            host=app['config'].get('host', '0.0.0.0'),
-            port=port,
-            shutdown_timeout=app['config'].get('shutdown_timeout_seconds', 2.0),
-            print=False,
-            # TODO: separate access logger
-            access_log=log.app_logger,
-        )
-
 
     @property
     def _default_config(self) -> dict:
@@ -129,10 +110,6 @@ class AppBuilder:
         else:
             self._logger.info('Using default asyncio loop')
 
-    def _update_config(self, new_config: dict = None) -> dict:
-        """:return: copy of local config, updated with new_config"""
-        return
-
     @staticmethod
     def _add_default_contexts(app: web.Application):
         app.on_startup.append(create_metrics_sender)
@@ -140,3 +117,17 @@ class AppBuilder:
 
         app.on_startup.append(configure_sentry)
         app.on_cleanup.append(dispose_sentry)
+
+
+def run_app(app: web.Application):
+    port = app['config'].get('port', 8890)
+    log.app_logger.warn(f'Service running at http://{socket.gethostname()}:{port}')
+    web.run_app(
+        app,
+        host=app['config'].get('host', '0.0.0.0'),
+        port=port,
+        shutdown_timeout=app['config'].get('shutdown_timeout_seconds', 2.0),
+        print=False,
+        # TODO: separate access logger
+        access_log=log.app_logger,
+    )

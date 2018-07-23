@@ -3,7 +3,10 @@ import yaml
 from copy import deepcopy
 
 
-def update(old_config, new_config) -> dict:
+def update(old_config: dict, new_config: dict) -> dict:
+    """
+    :return: new object with merged old and new config (1st level nested dicts updated)
+    """
     if not new_config:
         new_config = {}
     config = deepcopy(old_config)
@@ -17,6 +20,7 @@ def update(old_config, new_config) -> dict:
 
 
 class ConfigParser:
+    #TODO: mb refactor it to functions?
 
     def __init__(self, initial_config: dict = None):
         if not initial_config:

@@ -9,7 +9,8 @@ def main():
     sys.path.append(path.join(cur_dir, '..'))
     import avio.app_builder
     builder = avio.app_builder.AppBuilder()
-    builder.run_app()
+    app = builder.build_app()
+    avio.app_builder.run_app(app)
 
 
 if __name__ == '__main__':
