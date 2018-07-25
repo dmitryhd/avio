@@ -9,7 +9,7 @@ class Client:
     default_config = {}
 
     @classmethod
-    def from_app(cls, app: web.Application):
+    async def from_app(cls, app: web.Application):
         """
         :return: instance of client, configured from config in application
         """

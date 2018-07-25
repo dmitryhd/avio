@@ -4,3 +4,4 @@ pyyaml>=3.12
 uvloop==0.11
 raven-aiohttp==0.7.0
 raven==6.9.0
+aioredis==1.1.0

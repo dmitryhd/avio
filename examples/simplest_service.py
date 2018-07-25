@@ -18,8 +18,8 @@ class ItemClient(JsonApiClient):
 class ItemHandler(ApiHandler):
 
     @property
-    def item_client(self) -> JsonApiClient:
-        return self.app['item_client']
+    def item_client(self) -> ItemClient:
+        return self.app[ItemClient.NAME]
 
     async def get(self):
         res = await self.item_client.get('')
