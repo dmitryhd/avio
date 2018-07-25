@@ -13,6 +13,7 @@ class ApiHandler(web.View):
     Address self.request to get app.
     """
     TIMER_PRECISION = 3
+    request: web.Request
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

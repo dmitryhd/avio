@@ -4,6 +4,7 @@ from aiohttp import web
 from avio import AppBuilder, run_app, app_logger
 from avio import ApiHandler
 from avio import JsonApiClient
+from avio.redis_client import CacheRedisClient
 
 
 class ItemClient(JsonApiClient):
@@ -15,17 +16,32 @@ class ItemClient(JsonApiClient):
     }
 
 
-class ItemHandler(ApiHandler):
+class AppHandler(ApiHandler):
 
     @property
     def item_client(self) -> ItemClient:
         return self.app[ItemClient.NAME]
 
+    @property
+    def cache_client(self) -> CacheRedisClient:
+        return self.app[CacheRedisClient.NAME]
+
+
+class ItemHandler(AppHandler):
+
     async def get(self):
+        _id = self.request.query.get('id', 1)
+        data = await self.cache_client.get(_id)
+        if data:
+            app_logger.warn('HIT')
+            return self.finalize(data)
+        else:
+            app_logger.warn('Miss')
         res = await self.item_client.get('')
-        return self.finalize({
-            'item': res.json
-        })
+        data = res.json
+        if data:
+            await self.cache_client.setex(_id, data)
+        return self.finalize(data)
 
 
 class ExampleAppBuilder(AppBuilder):
@@ -43,9 +59,11 @@ class ExampleAppBuilder(AppBuilder):
 
     def prepare_app(self, app: web.Application, config: dict = None):
         app.router.add_view('/item', ItemHandler, name='item')
-
-        app.on_startup.append(ItemClient.startup)
-        app.on_cleanup.append(ItemClient.cleanup)
+        self.register_clients(
+            app,
+            ItemClient,
+            CacheRedisClient,
+        )
 
 
 def main():

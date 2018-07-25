@@ -120,6 +120,22 @@ class AppBuilder:
         app.on_startup.append(configure_sentry)
         app.on_cleanup.append(dispose_sentry)
 
+    @staticmethod
+    def register_clients(app, *clients_classes):
+        """
+        usage:
+        ```python
+        self.register_clients(
+            app,
+            ItemClient,
+            CacheRedisClient,
+        )
+        ```
+        """
+        for client_class in clients_classes:
+            app.on_startup.append(client_class.startup)
+            app.on_cleanup.append(client_class.cleanup)
+
 
 def run_app(app: web.Application):
     port = app['config'].get('port', 8890)
