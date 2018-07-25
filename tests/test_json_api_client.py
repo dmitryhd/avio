@@ -20,7 +20,7 @@ async def test_get(test_api_client):
 
 
 async def test_repr(test_api_client):
-    assert '127.0.0.1' in str(test_api_client)
+    assert 'api_client' in str(test_api_client)
 
 
 async def test_error(test_api_client):

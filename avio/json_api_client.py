@@ -46,14 +46,20 @@ class JsonApiClient(Client):
     All responses are json.
     return values are ApiResponse objects (have status and json fields)
     """
-    NAME = 'item_client'
+    NAME = 'api_client'
+    default_config = {
+        'url': '',
+        'timeout_seconds': 1,
+        'conn_limit': 100,
+    }
 
     def __init__(self,
                  url: str,
                  session: aiohttp.ClientSession = None,
-                 timeout_seconds: float = None):
+                 timeout_seconds: float = None,
+                 conn_limit: int = 100):
         self._base_url = URL(url)
-        self._session = session or get_session()
+        self._session = session or get_session(limit=conn_limit)
         self._timeout_seconds = timeout_seconds
 
     async def _fetch(self, future) -> ApiResponse:
@@ -89,6 +95,3 @@ class JsonApiClient(Client):
         if not path:
             return self._base_url
         return self._base_url.join(URL(path)).human_repr()
-
-    def __repr__(self) -> str:
-        return f'<JsonApiClient(\'{self._base_url}\')>'

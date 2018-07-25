@@ -6,35 +6,13 @@ from avio import ApiHandler
 from avio import JsonApiClient
 
 
-class ItemClient:
+class ItemClient(JsonApiClient):
     NAME = 'item_client'
-
-    @classmethod
-    def from_app(cls, app: web.Application):
-        return JsonApiClient(**app['config'][cls.NAME])
-
-    async def open(self, app: web.Application):
-        app_logger.debug(f'{self.NAME} created')
-        app[self.NAME] = JsonApiClient(**app['config'][self.NAME])
-
-    async def close(self, app: web.Application):
-        if 'item_client' in app:
-            app_logger.debug(f'{self.NAME} deleted')
-            await app[self.NAME].close()
-            del app[self.NAME]
-
-
-# TODO: make client as part of applicatoin???
-async def create_cli(app: web.Application):
-    app_logger.debug('client created')
-    app['item_client'] = JsonApiClient(**app['config']['item_client'])
-
-
-async def dispose_cli(app: web.Application):
-    if 'item_client' in app:
-        app_logger.debug('client deleted')
-        await app['item_client'].close()
-        del app['item_client']
+    default_config = {
+        'url': '',
+        'timeout_seconds': 1,
+        'conn_limit': 100,
+    }
 
 
 class ItemHandler(ApiHandler):
@@ -50,14 +28,10 @@ class ItemHandler(ApiHandler):
         })
 
 
-class ClientAppBuilder(AppBuilder):
-    pass
-
-
 class ExampleAppBuilder(AppBuilder):
 
     additional_config = {
-        'item_client': {
+        ItemClient.NAME: {
             'url': 'http://localhost:8891/item',
             'timeout_seconds': .5,
         },
@@ -70,8 +44,8 @@ class ExampleAppBuilder(AppBuilder):
     def prepare_app(self, app: web.Application, config: dict = None):
         app.router.add_view('/item', ItemHandler, name='item')
 
-        app.on_startup.append(create_cli)
-        app.on_cleanup.append(dispose_cli)
+        app.on_startup.append(ItemClient.startup)
+        app.on_cleanup.append(ItemClient.cleanup)
 
 
 def main():
