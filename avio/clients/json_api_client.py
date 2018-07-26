@@ -5,7 +5,7 @@ import aiohttp
 import async_timeout
 from yarl import URL
 
-from avio.client import Client
+from avio.clients.client import Client
 
 
 TIMEOUT_CODE = 599

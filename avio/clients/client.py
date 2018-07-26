@@ -58,8 +58,8 @@ class Client:
 
     def __repr__(self) -> str:
         if self.config:
-            cfg_str = ', '.join(f'{key}={val}' for key, val in self.config.items())
+            cfg_str = ', '.join(f'{key}={val!r}' for key, val in self.config.items())
         else:
             cfg_str = ''
-        return f'<{self.__class__.__name__}(name={self.NAME}, {cfg_str})>'
+        return f'<{self.__class__.__name__}(name={self.NAME!r}, {cfg_str})>'
 

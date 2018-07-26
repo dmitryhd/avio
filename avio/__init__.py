@@ -5,4 +5,4 @@ from avio.app_builder import ProtoAppBuilder
 from avio.app_builder import run_app
 from avio.config import ConfigParser
 from avio.api_handler import ApiHandler
-from avio.json_api_client import JsonApiClient
+from avio.clients.json_api_client import JsonApiClient

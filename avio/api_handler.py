@@ -36,7 +36,6 @@ class ApiHandler(web.View):
 
     @property
     def config(self) -> dict:
-        # TODO: mb make it read only?)
         return self.request.app['config']
 
     async def request_json(self) -> dict:

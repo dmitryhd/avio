@@ -33,10 +33,10 @@ _Work in progress_
 - [x] pyflame profile
 - [ ] smart stub (delay, errors, json responses, bursts)
 - [x] performance benchmark vs tornado
-- [ ] example
-- [ ] register clients
+- [x] example
+- [x] register clients
 - [ ] periodic task to update (https://aiohttp.readthedocs.io/en/stable/web_advanced.html#background-tasks1)
-- [ ] redis client
+- [x] redis client
 - [ ] readiness/liveliness probe
 - [ ] swagger autodoc
 ## v0.6

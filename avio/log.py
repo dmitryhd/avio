@@ -73,10 +73,12 @@ class JsonRecordFormatter(logging.Formatter):
         record.hostname = self._hostname
         record.type = record.levelname[0]
 
-        data = {
+        # To ensure that message comes first. Readability counts :)
+        data = {'message': ''}
+        data.update({
             key: value % record.__dict__
             for key, value in self._fmt_dict.items()
-        }
+        })
 
         self._structuring(data, record)
         return data
@@ -119,12 +121,12 @@ class JsonRecordFormatter(logging.Formatter):
                 s = self._fmt % record.__dict__
 
         if record.exc_text:
-            if s[-1:] != "\n":
-                s = s + "\n"
+            if s[-1:] != '\n':
+                s = s + '\n'
             s = s + record.exc_text
         if hasattr(record, 'stack_info') and record.stack_info:
-            if s[-1:] != "\n":
-                s = s + "\n"
+            if s[-1:] != '\n':
+                s = s + '\n'
             s = s + self.formatStack(record.stack_info)
         return s
 

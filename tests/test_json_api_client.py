@@ -1,6 +1,6 @@
 import pytest
 
-from avio import json_api_client as api_client
+from avio.clients import json_api_client as api_client
 
 
 @pytest.fixture()

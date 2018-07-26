@@ -6,7 +6,7 @@ import aioredis
 from aiohttp import web
 from async_timeout import timeout
 
-from avio.client import Client
+from avio.clients.client import Client
 
 
 class RedisClient(Client):
@@ -33,6 +33,7 @@ class RedisClient(Client):
         self._op_timeout = kwargs.get('op_timeout')  # None will disable timeout
 
     async def close(self):
+        self.redis_pool.close()
         await self.redis_pool.wait_closed()
 
     @classmethod
@@ -126,15 +127,18 @@ class CacheRedisClient(RedisClient):
             return None
 
     def deserialize(self, raw_data: bytes):
+        if not raw_data:
+            return None
         try:
-            return json.loads(raw_data.decode('utf8'), ensure_ascii=False)
+            return json.loads(raw_data)
         except (json.JSONDecodeError, TypeError):
             return None
 
     async def get(self, key) -> Optional[dict]:
         try:
             raw_data = await super().get(key)
-            return self.deserialize(raw_data)
+            deser = self.deserialize(raw_data)
+            return deser
         except asyncio.TimeoutError:
             return None
 
@@ -143,7 +147,7 @@ class CacheRedisClient(RedisClient):
         This function returns immediately.
         Uses self.ttl_seconds.
         """
-        val = self.serialize(val)
-        future = super().setex(key, val, self.ttl_seconds)
+        raw_data = self.serialize(val)
+        future = super().setex(key, raw_data, self.ttl_seconds)
         # Fire and forget coroutine
         asyncio.ensure_future(future, loop=self.redis_pool._loop)

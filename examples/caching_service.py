@@ -4,10 +4,11 @@ from aiohttp import web
 from avio import ProtoAppBuilder, run_app, app_logger
 from avio import ApiHandler
 from avio import JsonApiClient
-from avio.redis_client import CacheRedisClient
+from avio.clients.redis_client import CacheRedisClient
 
 
 class ItemClient(JsonApiClient):
+
     NAME = 'item_client'
     default_config = {
         'url': '',
@@ -33,14 +34,16 @@ class ItemHandler(AppHandler):
         _id = self.request.query.get('id', 1)
         data = await self.cache_client.get(_id)
         if data:
-            app_logger.warn('HIT')
+            self.metrics_buffer.incr('cache_hit')
             return self.finalize(data)
         else:
-            app_logger.warn('Miss')
+            self.metrics_buffer.incr('cache_miss')
         res = await self.item_client.get('')
         data = res.json
+        print('data1', data)
         if data:
             await self.cache_client.setex(_id, data)
+        print('data2', data)
         return self.finalize(data)
 
 
