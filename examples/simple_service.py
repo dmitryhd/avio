@@ -3,7 +3,7 @@
 import asyncio
 
 from aiohttp import web
-from avio import AppBuilder, run_app, app_logger
+from avio import ProtoAppBuilder, run_app, app_logger
 from avio import ApiHandler
 
 
@@ -14,7 +14,7 @@ class ItemHandler(ApiHandler):
         return self.finalize({'data': 100})
 
 
-class ExampleAppBuilder(AppBuilder):
+class AppBuilder(ProtoAppBuilder):
 
     additional_config = {
         'logging': {'level': 'DEBUG'},
@@ -27,7 +27,7 @@ class ExampleAppBuilder(AppBuilder):
 
 
 def main():
-    builder = ExampleAppBuilder()
+    builder = AppBuilder()
     app = builder.build_app()
     run_app(app)
 

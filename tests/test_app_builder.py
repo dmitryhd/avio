@@ -1,16 +1,16 @@
 from aiohttp import web
 
-from avio.app_builder import AppBuilder
+from avio.app_builder import ProtoAppBuilder
 from avio.default_handlers import InfoHandler
 
 
 def test_create_app():
-    app = AppBuilder().build_app()
+    app = ProtoAppBuilder().build_app()
     assert isinstance(app, web.Application)
 
 
 def test_app_config():
-    builder = AppBuilder({'app_key': 'value'})
+    builder = ProtoAppBuilder({'app_key': 'value'})
     app = builder.build_app({'update_key': 'value'})
     config = app['config']
     assert 'value' == config['app_key']
@@ -22,7 +22,7 @@ def test_app_config():
 
 
 def test_app_routes():
-    builder = AppBuilder()
+    builder = ProtoAppBuilder()
     app = builder.build_app()
     assert 'info' in app.router.named_resources()
     assert 'error' in app.router.named_resources()
@@ -30,7 +30,7 @@ def test_app_routes():
 
 def test_additional_routes():
 
-    class MyAppBuilder(AppBuilder):
+    class MyAppBuilder(ProtoAppBuilder):
 
         def prepare_app(self, app: web.Application, config: dict = None):
             app.router.add_view('/_info2', InfoHandler, name='info2')

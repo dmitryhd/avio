@@ -75,6 +75,34 @@ class RedisClient(Client):
 
 
 class CacheRedisClient(RedisClient):
+    """
+    Usage:
+    ```python
+
+    @property
+    def cache_client(self) -> CacheRedisClient:
+        return self.app[CacheRedisClient.NAME]
+
+
+    class ItemHandler(AppHandler):
+
+        async def get(self):
+            _id = self.request.query.get('id', 1)
+
+            data = await self.cache_client.get(_id)
+            if data:
+                app_logger.warn('HIT')
+                return self.finalize(data)
+            else:
+                app_logger.warn('Miss')
+            res = await self.item_client.get('')
+            data = res.json
+            if data:
+                await self.cache_client.setex(_id, data)
+            return self.finalize(data)
+    ```
+    """
+
     NAME = 'cache_redis_client'
     default_config = {
         'host': 'localhost',
@@ -91,18 +119,31 @@ class CacheRedisClient(RedisClient):
         super().__init__(**kwargs)
         self.ttl_seconds = kwargs.get('ttl_seconds', 5)
 
-    async def get(self, key) -> Optional[dict]:
+    def serialize(self, data) -> Optional[bytes]:
         try:
-            data = await super().get(key)
-            return json.loads(data)
-        except asyncio.TimeoutError:
-            return None
+            return json.dumps(data, ensure_ascii=False).encode('utf8')
         except (json.JSONDecodeError, TypeError):
             return None
 
+    def deserialize(self, raw_data: bytes):
+        try:
+            return json.loads(raw_data.decode('utf8'), ensure_ascii=False)
+        except (json.JSONDecodeError, TypeError):
+            return None
+
+    async def get(self, key) -> Optional[dict]:
+        try:
+            raw_data = await super().get(key)
+            return self.deserialize(raw_data)
+        except asyncio.TimeoutError:
+            return None
+
     async def setex(self, key, val, ttl: float = 1):
-        if isinstance(val, list) or isinstance(val, dict):
-            val = json.dumps(val, ensure_ascii=False)
+        """
+        This function returns immediately.
+        Uses self.ttl_seconds.
+        """
+        val = self.serialize(val)
         future = super().setex(key, val, self.ttl_seconds)
-        # Fire and forget!
+        # Fire and forget coroutine
         asyncio.ensure_future(future, loop=self.redis_pool._loop)

@@ -9,7 +9,7 @@ cur_dir = path.dirname(path.abspath(__file__))
 sys.path.append(path.join(cur_dir, '..'))
 
 from avio.api_handler import ApiHandler
-from avio.app_builder import AppBuilder, run_app
+from avio.app_builder import ProtoAppBuilder, run_app
 from avio.json_api_client import JsonApiClient
 
 
@@ -57,7 +57,7 @@ class SleepHandler100(ApiHandler):
 
 def main():
 
-    builder = AppBuilder()
+    builder = ProtoAppBuilder()
 
     app = builder.build_app()
 

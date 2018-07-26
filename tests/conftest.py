@@ -1,7 +1,7 @@
 import pytest
 from aiohttp import web
 
-from avio.app_builder import AppBuilder
+from avio.app_builder import ProtoAppBuilder
 from avio.metrics import DummyMetricsSender
 
 
@@ -16,7 +16,7 @@ def test_config():
 
 @pytest.fixture
 def test_app(test_config) -> web.Application:
-    app_builder = AppBuilder()
+    app_builder = ProtoAppBuilder()
     app = app_builder.build_app(test_config)
     return app
 

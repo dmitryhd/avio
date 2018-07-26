@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from aiohttp import web
-from avio import AppBuilder, run_app, app_logger
+from avio import ProtoAppBuilder, run_app, app_logger
 from avio import ApiHandler
 from avio import JsonApiClient
 from avio.redis_client import CacheRedisClient
@@ -44,7 +44,7 @@ class ItemHandler(AppHandler):
         return self.finalize(data)
 
 
-class ExampleAppBuilder(AppBuilder):
+class AppBuilder(ProtoAppBuilder):
 
     additional_config = {
         ItemClient.NAME: {
@@ -67,7 +67,7 @@ class ExampleAppBuilder(AppBuilder):
 
 
 def main():
-    builder = ExampleAppBuilder()
+    builder = AppBuilder()
     app = builder.build_app()
     run_app(app)
 

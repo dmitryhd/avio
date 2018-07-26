@@ -15,17 +15,16 @@ from avio.metrics import create_metrics_sender, dispose_metrics_sender
 from avio.sentry import configure_sentry, dispose_sentry
 
 
-class AppBuilder:
+class ProtoAppBuilder:
     """
     Usage:
     customization: just inherit me and overwrite self.prepare_app
-    >>> builder = AppBuilder({'connections': 100})
+    >>> builder = ProtoAppBuilder({'connections': 100})
     >>> app = builder.build_app({'custom_setting': 1})
     """
-    additional_config = {
-    }
+    additional_config: dict = {}
 
-    _default_config = {
+    _default_config: dict = {
         'logging': {
             'level': 'WARN',
             'tag': 'tag_not_set',
