@@ -4,9 +4,11 @@ import socket
 import json
 
 APP_LOGGER_NAME = 'avio'
+ACCESS_LOGGER_NAME = 'access'
 DEFAULT_LOGGER_LEVEL = 'INFO'
 
 app_logger = logging.getLogger(APP_LOGGER_NAME)
+access_logger = logging.getLogger(ACCESS_LOGGER_NAME)
 
 
 def configure_app_logger(logger_config: dict = None) -> logging.Logger:
@@ -25,9 +27,18 @@ def configure_app_logger(logger_config: dict = None) -> logging.Logger:
     logger_config.setdefault('level', 'warning')
     logger_config.setdefault('use_sentry', False)
 
-    logger = logging.getLogger(logger_config.get('name', APP_LOGGER_NAME))
+    setup_logger(ACCESS_LOGGER_NAME, logger_config['access_level'], logger_config)
+
+    logger_name = logger_config.get('name', APP_LOGGER_NAME)
+    logger = setup_logger(logger_name, logger_config['level'], logger_config)
+
+    return logger
+
+def setup_logger(name, level, logger_config):
+
+    logger = logging.getLogger(name)
     logger.handlers = []
-    level = get_log_level_by_name(logger_config['level'])
+    level = get_log_level_by_name(level)
     logger.setLevel(level)
 
     if logger_config['use_json_formatter']:
@@ -42,7 +53,6 @@ def configure_app_logger(logger_config: dict = None) -> logging.Logger:
         formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
         ch.setFormatter(formatter)
         logger.addHandler(ch)
-
     return logger
 
 

@@ -84,4 +84,4 @@ async def measure_time_and_send_metrics(request, handler):
 
         # TODO: remove later
         num_tasks = len(asyncio.Task.all_tasks())
-        log.app_logger.info(f'response took {request.timers["response"]:.3f} s, {num_tasks:,} running')
+        log.access_logger.info(f'response took {request.timers["response"]:.3f} s, {num_tasks:,} coroutines running')

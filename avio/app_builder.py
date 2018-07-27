@@ -1,11 +1,12 @@
 import time
-
-from aiohttp import web
-import socket
-import asyncio
-import uvloop
 from copy import deepcopy
 from typing import Optional
+import socket
+
+import yaml
+import asyncio
+import uvloop
+from aiohttp import web
 
 import avio.log as log
 import avio.default_middleware as default_middleware
@@ -28,6 +29,7 @@ class ProtoAppBuilder:
         'logging': {
             'level': 'WARN',
             'tag': 'tag_not_set',
+            'access_level': 'WARN',
             'sentry_enabled': False,
             'sentry_dsn': '',
             'sentry_concurrent': 2,
@@ -146,5 +148,13 @@ def run_app(app: web.Application):
         shutdown_timeout=app['config'].get('shutdown_timeout_seconds', 2.0),
         print=False,
         # TODO: separate access logger
-        access_log=log.app_logger,
+        access_log=log.access_logger,
     )
+
+
+def print_config_yaml(app: web.Application):
+    config = app['config']
+    for client_name in app.get('client_names', []):
+        config[client_name] = app[client_name].config
+        print(app[client_name].config)
+    print(yaml.dump(config, default_flow_style=False))

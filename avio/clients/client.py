@@ -34,8 +34,12 @@ class Client:
         """
 
         if cls.NAME in app:
-            app_logger.warn(f'{cls.NAME} already in app!')
-            await cls.cleanup(app)
+            raise RuntimeError(f'Trying to register client {cls.NAME} already in app')
+
+        if 'client_names' in app:
+            app['client_names'].append(cls.NAME)
+        else:
+            app['client_names'] = [cls.NAME]
 
         instance = await cls.from_app(app)
         app[cls.NAME] = instance
@@ -52,6 +56,10 @@ class Client:
             await app[cls.NAME].close()
             del app[cls.NAME]
             app_logger.debug(f'{cls.NAME} deleted')
+            try:
+                app['client_names'].remove(cls.NAME)
+            except ValueError:
+                pass
 
     async def close(self):
         app_logger.warn(f'{self.NAME} not implemented!')

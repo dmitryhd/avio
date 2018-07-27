@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from aiohttp import web
-from avio import ProtoAppBuilder, run_app, app_logger
+from avio import ProtoAppBuilder, run_app, app_logger, print_config_yaml
 from avio import ApiHandler
 from avio import JsonApiClient
 from avio.clients.redis_client import CacheRedisClient
@@ -40,10 +40,8 @@ class ItemHandler(AppHandler):
             self.metrics_buffer.incr('cache_miss')
         res = await self.item_client.get('')
         data = res.json
-        print('data1', data)
         if data:
             await self.cache_client.setex(_id, data)
-        print('data2', data)
         return self.finalize(data)
 
 
@@ -72,7 +70,9 @@ class AppBuilder(ProtoAppBuilder):
 def main():
     builder = AppBuilder()
     app = builder.build_app()
-    run_app(app)
+
+    print_config_yaml(app)
+    # run_app(app)
 
 
 if __name__ == '__main__':
