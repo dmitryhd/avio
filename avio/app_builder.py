@@ -9,7 +9,7 @@ import uvloop
 from aiohttp import web
 
 import avio.log as log
-import avio.default_middleware as default_middleware
+import avio.middleware as middleware
 import avio.default_handlers as default_handlers
 import avio.config as cfg
 from avio.metrics import create_metrics_sender, dispose_metrics_sender
@@ -62,8 +62,8 @@ class ProtoAppBuilder:
 
         self._logger = log.app_logger
         self.middlewares = [
-            default_middleware.format_exceptions,
-            default_middleware.measure_time_and_send_metrics,
+            middleware.format_exceptions,
+            middleware.measure_time_and_send_metrics,
         ]
         self.client_classes = []
 

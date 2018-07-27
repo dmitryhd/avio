@@ -1,7 +1,7 @@
 logging:
   level: info
   tag: 'avio'
-  use_json_formatter: false
+  use_json_formatter: true
   sentry_enabled: false
   sentry_dsn: ''
   sentry_concurrent: 2

@@ -77,6 +77,9 @@ class MetricsBuffer:
     def timing(self, name, value):
         self._set_metric(name, value, b'ms')
 
+    def timing_sec(self, name, seconds: Union[float, int]):
+        self._set_metric(name, seconds * 1000, b'ms')
+
     def histogram(self, name, value):
         self._set_metric(name, value, b'h')
 

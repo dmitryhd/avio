@@ -14,11 +14,9 @@ from avio.metrics import MetricsBuffer
 
 UNHANDLED_ERROR_MESSAGE = 'Wild error occured!'
 
-# TODO: document middlewares
-
 
 @web.middleware
-async def format_exceptions(request, handler):
+async def format_exceptions(request: web.Request, handler):
     """
     Middleware, that leaves responses, that don't raise exceptions unchanged.
 
@@ -77,11 +75,12 @@ async def measure_time_and_send_metrics(request, handler):
         if 'metrics_sender' in request.app:
 
             for timer_name, seconds in request.timers.items():
-                request.metrics_buffer.timing(timer_name, seconds * 1000)  # NOTE: conversion to ms.
+                request.metrics_buffer.timing_sec(timer_name, seconds)
 
             # Fire and forget metric
             asyncio.ensure_future(request.app['metrics_sender'].send_buffer(request.metrics_buffer))
 
-        # TODO: remove later
-        num_tasks = len(asyncio.Task.all_tasks())
-        log.access_logger.info(f'response took {request.timers["response"]:.3f} s, {num_tasks:,} coroutines running')
+        # Debug output
+        # num_tasks = len(asyncio.Task.all_tasks())
+        # msg = f'response took {request.timers["response"]:.3f} s, {num_tasks:,} coroutines running'
+        # log.access_logger.debug(msg)

@@ -70,7 +70,9 @@ class AppBuilder(ProtoAppBuilder):
 def main():
     builder = AppBuilder()
     app = builder.build_app()
-
+    import asyncio
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(app.on_startup.send())
     print_config_yaml(app)
     # run_app(app)
 

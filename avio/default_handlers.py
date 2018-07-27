@@ -21,8 +21,8 @@ class ErrorHandler(ApiHandler):
 class EchoHandler(ApiHandler):
 
     async def post(self):
-        j = await self.request_json()
-        return self.finalize(j)
+        request_data = await self.request_json()
+        return self.finalize(request_data)
 
 
 class DetailedInfoHandler(ApiHandler):

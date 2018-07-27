@@ -1,4 +1,4 @@
-import avio.default_middleware
+import avio.middleware
 
 
 async def test_info(cli):
@@ -14,7 +14,7 @@ async def test_error_handler(cli):
 
     assert 500 == response.status
     assert 500 == response_json['code']
-    assert avio.default_middleware.UNHANDLED_ERROR_MESSAGE == response_json['message']
+    assert avio.middleware.UNHANDLED_ERROR_MESSAGE == response_json['message']
     assert response_json['traceback'].startswith('Traceback (most recent call last):\n  File')
 
 
