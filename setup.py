@@ -11,7 +11,7 @@ with open('requirements.txt') as f:
 setup(
     name='avio',
     version='0.1.2',
-    description='',
+    description='Aiohttp based microservice framework. Batteries included.',
     packages=find_packages(),
     install_requires=required,
 )
